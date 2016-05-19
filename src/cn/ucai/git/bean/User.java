@@ -17,6 +17,7 @@ public class User extends Location implements java.io.Serializable {
 	private String muserPassword;
 	private String muserNick;
 	private Integer muserUnreadMsgCount;
+	private String header;
 
 	// Constructors
 
@@ -83,6 +84,14 @@ public class User extends Location implements java.io.Serializable {
 
 	public void setMUserUnreadMsgCount(Integer MUserUnreadMsgCount) {
 		this.muserUnreadMsgCount = MUserUnreadMsgCount;
+	}
+
+	public String getHeader() {
+		return header;
+	}
+
+	public void setHeader(String header) {
+		this.header = header;
 	}
 
 	@Override

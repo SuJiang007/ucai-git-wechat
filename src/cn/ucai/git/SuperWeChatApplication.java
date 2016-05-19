@@ -71,13 +71,15 @@ public class SuperWeChatApplication extends Application {
 	public static SuperWeChatApplication getInstance() {
 		return instance;
 	}
- 
+
 
 	/**
-	 * 获取当前登陆用户名
+	 * * 获取当前登陆用户名
 	 *
 	 * @return
-	 */
+     */
+
+
 	public String getUserName() {
 	    return hxSDKHelper.getHXId();
 	}
@@ -94,7 +96,7 @@ public class SuperWeChatApplication extends Application {
 	/**
 	 * 设置用户名
 	 *
-	 * @param username
+	 * @param  username
 	 */
 	public void setUserName(String username) {
 	    hxSDKHelper.setHXId(username);
