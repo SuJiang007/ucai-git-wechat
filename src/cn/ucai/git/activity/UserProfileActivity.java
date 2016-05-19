@@ -27,7 +27,7 @@ import cn.ucai.git.applib.controller.HXSDKHelper;
 import com.easemob.chat.EMChatManager;
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
-import cn.ucai.git.domain.User;
+import cn.ucai.git.domain.EMUser;
 import cn.ucai.git.utils.UserUtils;
 import com.squareup.picasso.Picasso;
 
@@ -120,10 +120,10 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
 	}
 	
 	public void asyncFetchUserInfo(String username){
-		((DemoHXSDKHelper)HXSDKHelper.getInstance()).getUserProfileManager().asyncGetUserInfo(username, new EMValueCallBack<User>() {
+		((DemoHXSDKHelper)HXSDKHelper.getInstance()).getUserProfileManager().asyncGetUserInfo(username, new EMValueCallBack<EMUser>() {
 			
 			@Override
-			public void onSuccess(User user) {
+			public void onSuccess(EMUser user) {
 				if (user != null) {
 					tvNickName.setText(user.getNick());
 					if(!TextUtils.isEmpty(user.getAvatar())){

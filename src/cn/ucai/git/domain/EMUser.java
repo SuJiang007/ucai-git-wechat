@@ -13,16 +13,17 @@
  */
 package cn.ucai.git.domain;
 
+
 import com.easemob.chat.EMContact;
 
-public class User extends EMContact {
+public class EMUser extends EMContact {
 	private int unreadMsgCount;
 	private String header;
 	private String avatar;
 	
-	public User(){}
+	public EMUser(){}
 	
-	public User(String username){
+	public EMUser(String username){
 	    this.username = username;
 	}
 
@@ -59,10 +60,10 @@ public class User extends EMContact {
 
 	@Override
 	public boolean equals(Object o) {
-		if (o == null || !(o instanceof User)) {
+		if (o == null || !(o instanceof EMUser)) {
 			return false;
 		}
-		return getUsername().equals(((User) o).getUsername());
+		return getUsername().equals(((EMUser) o).getUsername());
 	}
 
 	@Override

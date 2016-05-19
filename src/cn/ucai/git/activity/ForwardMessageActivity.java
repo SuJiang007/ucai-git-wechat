@@ -17,10 +17,10 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import cn.ucai.git.R;
-import cn.ucai.git.domain.User;
+import cn.ucai.git.domain.EMUser;
 
 public class ForwardMessageActivity extends PickContactNoCheckboxActivity {
-	private User selectUser;
+	private EMUser selectUser;
 	private String forward_msg_id;
 
 	 

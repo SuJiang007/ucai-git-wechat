@@ -58,7 +58,7 @@ import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
 import cn.ucai.git.adapter.ChatHistoryAdapter;
 import cn.ucai.git.db.InviteMessgeDao;
-import cn.ucai.git.domain.User;
+import cn.ucai.git.domain.EMUser;
 
 /**
  * 聊天记录Fragment
@@ -68,7 +68,7 @@ public class ChatHistoryFragment extends Fragment {
 
 	private InputMethodManager inputMethodManager;
 	private ListView listView;
-	private Map<String, User> contactList;
+	private Map<String, EMUser> contactList;
 	private ChatHistoryAdapter adapter;
 	private EditText query;
 	private ImageButton clearSearch;
@@ -212,7 +212,7 @@ public class ChatHistoryFragment extends Fragment {
 	private List<EMContact> loadUsersWithRecentChat() {
 		List<EMContact> resultList = new ArrayList<EMContact>();
 		//获取有聊天记录的users，不包括陌生人
-		for (User user : contactList.values()) {
+		for (EMUser user : contactList.values()) {
 			EMConversation conversation = EMChatManager.getInstance().getConversation(user.getUsername());
 			if (conversation.getMsgCount() > 0) {
 				resultList.add(user);
