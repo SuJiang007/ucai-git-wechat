@@ -24,6 +24,8 @@ public class SuperWeChatApplication extends Application {
 	private static SuperWeChatApplication instance;
 	// login user name
 	public final String PREF_USERNAME = "username";
+
+	public static String ROOT_SERVER = "http://10.0.2.2:9999/SuperWeChatServer/Server";
 	
 	/**
 	 * 当前用户nickname,为了苹果推送不是userid而是昵称
@@ -84,7 +86,7 @@ public class SuperWeChatApplication extends Application {
 	/**
 	 * 设置用户名
 	 *
-	 * @param user
+	 * @param username
 	 */
 	public void setUserName(String username) {
 	    hxSDKHelper.setHXId(username);
