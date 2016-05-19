@@ -141,6 +141,22 @@ public class Group extends Location implements java.io.Serializable {
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Group group = (Group) o;
+
+		return mgroupId.equals(group.mgroupId);
+
+	}
+
+	@Override
+	public int hashCode() {
+		return mgroupId.hashCode();
+	}
+
+	@Override
 	public String toString() {
 		return "Group [MGroupId=" + mgroupId + ", MGroupHxid=" + mgroupHxid
 				+ ", MGroupName=" + mgroupName + ", MGroupDescription="
