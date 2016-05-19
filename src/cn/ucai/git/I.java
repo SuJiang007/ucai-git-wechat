@@ -126,7 +126,7 @@ public interface I {
 	int MSG_LOCATION_UPDATE_SUCCESS					=		503;							//用户更新地理位置成功
 	int MSG_LOCATION_UPDATE_FAIL					=		504;							//用户更新地理位置失败
 	int MSG_UNKNOW									=		999;							//未知错误
-    String MSG_PREFIX_MSG                           =       "msg_";
+    String MSG_PREFIX_MSG                           =       "msg_";                         //返回消息码前缀
 	String KEY_REQUEST 								= 		"request";
 	/** 上传图片的类型：user_avatar或group_icon */
 	String AVATAR_TYPE 								= 		"avatarType";

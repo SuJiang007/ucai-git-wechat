@@ -113,46 +113,5 @@
     <string name="Please_enter_a_username">Пожалуйста, введите имя пользователя</string>
     <string name="is_down_please_wait">Пожалуйста подождите, видео загружается...</string>
     <string name="Exit_the_group_chat">Выйти из чата</string>
-    <string name="msg_900">msg:location_is_search_inhibit			</string>
-    <string name="msg_901">msg:msg_connection_success				</string>
-    <string name="msg_902">msg:msg_connection_fail					</string>
-    <string name="msg_903">msg:msg_upload_avatar_success			</string>
-    <string name="msg_101">msg:msg_upload_avatar_fail				</string>
-    <string name="msg_102">msg:msg_register_success				  </string>
-    <string name="msg_103">msg:msg_register_username_exists		  </string>
-    <string name="msg_104">msg:msg_register_upload_avatar_fail		</string>
-    <string name="msg_105">msg:msg_register_upload_avatar_success	</string>
-    <string name="msg_106">msg:msg_register_fail					</string>
-    <string name="msg_107">msg:msg_unregister_success				</string>
-    <string name="msg_201">msg:msg_unregister_fail					</string>
-    <string name="msg_202">msg:msg_contact_firended				   </string>
-    <string name="msg_301">msg:msg_contact_fail					   </string>
-    <string name="msg_302">msg:msg_group_create_scuuess			   </string>
-    <string name="msg_303">msg:msg_group_hxid_exists			   	</string>
-    <string name="msg_304">msg:msg_group_create_fail			   	</string>
-    <string name="msg_305">msg:msg_group_add_member_fail		   	</string>
-    <string name="msg_306">msg:msg_group_add_member_scuuess		   </string>
-    <string name="msg_307">msg:msg_group_unkonw					   </string>
-    <string name="msg_308">msg:msg_group_same_name				   	</string>
-    <string name="msg_309">msg:msg_group_update_name_success	   	</string>
-    <string name="msg_310">msg:msg_group_update_name_fail		   	</string>
-    <string name="msg_311">msg:msg_group_delete_member_success	   	</string>
-    <string name="msg_312">msg:msg_group_delete_member_fail		   </string>
-    <string name="msg_313">msg:msg_group_delete_success			   </string>
-    <string name="msg_401">msg:msg_group_delete_fail			   	</string>
-    <string name="msg_402">msg:msg_login_unknow_user			   	</string>
-    <string name="msg_403">msg:msg_login_error_password			   </string>
-    <string name="msg_404">msg:msg_login_success				   	</string>
-    <string name="msg_405">msg:msg_user_same_nick				   	</string>
-    <string name="msg_406">msg:msg_user_update_nick_success		   </string>
-    <string name="msg_407">msg:msg_user_update_nick_fail		   	</string>
-    <string name="msg_408">msg:msg_user_same_password			   	</string>
-    <string name="msg_409">msg:msg_user_update_password_success	   </string>
-    <string name="msg_501">msg:msg_user_update_password_fail	   	</string>
-    <string name="msg_502">msg:msg_location_upload_success		   	</string>
-    <string name="msg_503">msg:msg_location_upload_fail			   </string>
-    <string name="msg_504">msg:msg_location_update_success		   	</string>
-    <string name="msg_999">msg:msg_location_update_fail			   </string>
-
 
 </resources>
