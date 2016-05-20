@@ -83,9 +83,9 @@ public class LoginActivity extends BaseActivity {
 	}
 
 	private void setListener() {
+		setOnRegisterListener();
 		setOnLoginListener();
 		setOnUserNameChangedListener();
-		setOnRegisterListener();
 	}
 
 	private void setOnUserNameChangedListener() {
