@@ -8,14 +8,23 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dip"
-        android:layout_weight="1" >
+        android:layout_weight="1"
+        android:gravity="center">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
             android:layout_centerInParent="true"
-            android:src="@drawable/welcom_logo" />
+            android:src="@drawable/mobile"
+            android:id="@+id/ivmob"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="  超级微信"
+            android:layout_toRightOf="@+id/ivmob"
+            android:gravity="center_vertical"
+            android:textColor="#000"
+            android:textSize="20sp"/>
     </RelativeLayout>
 
     <RelativeLayout
@@ -95,6 +104,7 @@
             android:orientation="horizontal" >
 
             <Button
+                android:id="@+id/btnRegister"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dip"
@@ -102,7 +112,6 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_register_bg"
                 android:gravity="center"
-                android:onClick="register"
                 android:paddingBottom="7dp"
                 android:paddingTop="7dp"
                 android:text="@string/register"
@@ -110,6 +119,7 @@
                 android:textSize="18sp" />
 
             <Button
+                android:id="@+id/btnLogin"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dip"
@@ -117,13 +127,21 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_login_bg"
                 android:gravity="center"
-                android:onClick="login"
                 android:paddingBottom="7dp"
                 android:paddingTop="7dp"
                 android:text="@string/login"
                 android:textColor="@android:color/white"
                 android:textSize="18sp" />
         </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="设置服务器的IP地址"
+            android:textSize="20sp"
+            android:textColor="#000"
+            android:gravity="center_horizontal"
+            android:layout_alignParentBottom="true"
+            android:id="@+id/ip_address"/>
     </RelativeLayout>
 
 </LinearLayout>
