@@ -14,6 +14,7 @@
 package cn.ucai.git.activity;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -23,8 +24,12 @@ import android.widget.Toast;
 
 import com.easemob.EMError;
 import com.easemob.chat.EMChatManager;
+
+import cn.ucai.git.I;
 import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.R;
+import cn.ucai.git.listener.OnSetAvatarListener;
+
 import com.easemob.exceptions.EaseMobException;
 
 /**
@@ -38,6 +43,9 @@ public class RegisterActivity extends BaseActivity {
 	private EditText nickEditText;
 	private ImageView iv_avatar;
 
+	OnSetAvatarListener monSetAvatarListener;
+	String mAvatar;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -49,6 +57,29 @@ public class RegisterActivity extends BaseActivity {
 	private void setListener() {
 		setOnRegister();
 		setOnLogin();
+		setOnAvatarListener();
+	}
+
+	private void setOnAvatarListener() {
+        findViewById(R.id.layout_Photo).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				monSetAvatarListener = new OnSetAvatarListener(RegisterActivity.this, R.id.layout_register, getAvatarName(), I.AVATAR_TYPE_USER_PATH);
+			}
+		});
+	}
+
+	private String getAvatarName() {
+		mAvatar = System.currentTimeMillis() + "";
+		return mAvatar;
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode == RESULT_OK) {
+			monSetAvatarListener.setAvatar(requestCode,data,iv_avatar);
+		}
 	}
 
 	private void setOnLogin() {
