@@ -445,6 +445,9 @@ public class ContactlistFragment extends Fragment {
 		contactList.clear();
 		//获取本地好友列表
 		Map<String, EMUser> users = ((DemoHXSDKHelper)HXSDKHelper.getInstance()).getContactList();
+		if (users==null){
+			return;
+		}
 		Iterator<Entry<String, EMUser>> iterator = users.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, EMUser> entry = iterator.next();

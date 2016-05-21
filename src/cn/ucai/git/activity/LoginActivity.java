@@ -13,16 +13,24 @@
  */
 package cn.ucai.git.activity;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -31,17 +39,34 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.Response;
 import com.easemob.EMCallBack;
+
+import cn.ucai.git.I;
 import cn.ucai.git.applib.controller.HXSDKHelper;
+
+import com.easemob.chat.EMChat;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMGroupManager;
 import cn.ucai.git.Constant;
 import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
+import cn.ucai.git.bean.Avatar;
+import cn.ucai.git.bean.User;
+import cn.ucai.git.data.ApiParams;
+import cn.ucai.git.data.GsonRequest;
+import cn.ucai.git.data.OkHttpUtils;
 import cn.ucai.git.db.EMUserDao;
+import cn.ucai.git.db.UserDao;
 import cn.ucai.git.domain.EMUser;
+import cn.ucai.git.task.DownloadImageTask;
+import cn.ucai.git.utils.BitmapUtils;
 import cn.ucai.git.utils.CommonUtils;
+import cn.ucai.git.utils.ImageLoader;
+import cn.ucai.git.utils.ImageUtils;
+import cn.ucai.git.utils.MD5;
+import cn.ucai.git.utils.Utils;
 
 /**
  * 登陆页面
@@ -58,6 +83,8 @@ public class LoginActivity extends BaseActivity {
 
 	private String currentUsername;
 	private String currentPassword;
+	ProgressDialog pd;
+	Context mContext;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +98,7 @@ public class LoginActivity extends BaseActivity {
 			return;
 		}
 		setContentView(R.layout.activity_login);
-
+		mContext = this;
 		usernameEditText = (EditText) findViewById(R.id.username);
 		passwordEditText = (EditText) findViewById(R.id.password);
 
@@ -117,33 +144,22 @@ public class LoginActivity extends BaseActivity {
 			@Override
 			public void onClick(View v) {
 				if (!CommonUtils.isNetWorkConnected(LoginActivity.this)) {
-					Toast.makeText(LoginActivity.this, R.string.network_isnot_available, Toast.LENGTH_SHORT).show();
+					Toast.makeText(mContext, R.string.network_isnot_available, Toast.LENGTH_SHORT).show();
 					return;
 				}
 				currentUsername = usernameEditText.getText().toString().trim();
 				currentPassword = passwordEditText.getText().toString().trim();
 
 				if (TextUtils.isEmpty(currentUsername)) {
-					Toast.makeText(LoginActivity.this, R.string.User_name_cannot_be_empty, Toast.LENGTH_SHORT).show();
+					Toast.makeText(mContext, R.string.User_name_cannot_be_empty, Toast.LENGTH_SHORT).show();
 					return;
 				}
 				if (TextUtils.isEmpty(currentPassword)) {
-					Toast.makeText(LoginActivity.this, R.string.Password_cannot_be_empty, Toast.LENGTH_SHORT).show();
+					Toast.makeText(mContext, R.string.Password_cannot_be_empty, Toast.LENGTH_SHORT).show();
 					return;
 				}
 
-				progressShow = true;
-				final ProgressDialog pd = new ProgressDialog(LoginActivity.this);
-				pd.setCanceledOnTouchOutside(false);
-				pd.setOnCancelListener(new OnCancelListener() {
-
-					@Override
-					public void onCancel(DialogInterface dialog) {
-						progressShow = false;
-					}
-				});
-				pd.setMessage(getString(R.string.Is_landing));
-				pd.show();
+				showProgressDialog();
 
 				final long start = System.currentTimeMillis();
 				// 调用sdk登陆方法登陆聊天服务器
@@ -154,44 +170,7 @@ public class LoginActivity extends BaseActivity {
 						if (!progressShow) {
 							return;
 						}
-						// 登陆成功，保存用户名密码
-						SuperWeChatApplication.getInstance().setUserName(currentUsername);
-						SuperWeChatApplication.getInstance().setPassword(currentPassword);
-
-						try {
-							// ** 第一次登录或者之前logout后再登录，加载所有本地群和回话
-							// ** manually load all local groups and
-							EMGroupManager.getInstance().loadAllGroups();
-							EMChatManager.getInstance().loadAllConversations();
-							// 处理好友和群组
-							initializeContacts();
-						} catch (Exception e) {
-							e.printStackTrace();
-							// 取好友或者群聊失败，不让进入主页面
-							runOnUiThread(new Runnable() {
-								public void run() {
-									pd.dismiss();
-									DemoHXSDKHelper.getInstance().logout(true,null);
-									Toast.makeText(getApplicationContext(), R.string.login_failure_failed, Toast.LENGTH_SHORT).show();
-								}
-							});
-							return;
-						}
-						// 更新当前用户的nickname 此方法的作用是在ios离线推送时能够显示用户nick
-						boolean updatenick = EMChatManager.getInstance().updateCurrentUserNick(
-								SuperWeChatApplication.currentUserNick.trim());
-						if (!updatenick) {
-							Log.e("LoginActivity", "update current user nick fail");
-						}
-						if (!LoginActivity.this.isFinishing() && pd.isShowing()) {
-							pd.dismiss();
-						}
-						// 进入主页面
-						Intent intent = new Intent(LoginActivity.this,
-								MainActivity.class);
-						startActivity(intent);
-
-						finish();
+						loginAppServer();
 					}
 
 					@Override
@@ -216,6 +195,142 @@ public class LoginActivity extends BaseActivity {
 		});
 	}
 
+	private void loginAppServer() {
+		UserDao dao = new UserDao(mContext);
+		User user = dao.findUser(currentUsername);
+		if (user != null) {
+			if (user.getMUserPassword().equals(MD5.getData(currentPassword))) {
+				loginSuccess();
+			} else {
+				Toast.makeText(getApplicationContext(),
+						R.string.login_failure_failed, Toast.LENGTH_SHORT).show();
+			}
+		} else {
+			try {
+				String path = new ApiParams()
+						.with(I.User.USER_NAME, currentUsername)
+                        .with(I.User.PASSWORD, currentPassword)
+						.getRequestUrl(I.REQUEST_LOGIN);
+				executeRequest(new GsonRequest<User>(path,User.class,responseListener(),errorListener()));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private Response.Listener<User> responseListener() {
+		return new Response.Listener<User>() {
+			@Override
+			public void onResponse(User user) {
+				if (user.isResult()) {
+					saveUser(user);
+					loginSuccess();
+				} else {
+					pd.dismiss();
+					Utils.showToast(mContext,Utils.getResourceString(mContext,user.getMsg()),Toast.LENGTH_SHORT);
+				}
+			}
+		};
+	}
+
+	private void saveUser(User user) {
+		SuperWeChatApplication instance = SuperWeChatApplication.getInstance();
+		// 登陆成功，保存用户名密码
+		instance.setUser(user);
+		instance.setUserName(currentUsername);
+		instance.setPassword(currentPassword);
+		SuperWeChatApplication.currentUserNick = user.getMUserNick();
+	}
+
+	private void loginSuccess() {
+
+		try {
+			// ** 第一次登录或者之前logout后再登录，加载所有本地群和回话
+			// ** manually load all local groups and
+			EMGroupManager.getInstance().loadAllGroups();
+			EMChatManager.getInstance().loadAllConversations();
+			// 处理好友和群组
+			initializeContacts();
+			//下载用户头像
+			save2SD();
+		} catch (Exception e) {
+			e.printStackTrace();
+			// 取好友或者群聊失败，不让进入主页面
+			runOnUiThread(new Runnable() {
+				public void run() {
+					pd.dismiss();
+					DemoHXSDKHelper.getInstance().logout(true,null);
+					Toast.makeText(getApplicationContext(), R.string.login_failure_failed, Toast.LENGTH_SHORT).show();
+				}
+			});
+			return;
+		}
+		// 更新当前用户的nickname 此方法的作用是在ios离线推送时能够显示用户nick
+		boolean updatenick = EMChatManager.getInstance().updateCurrentUserNick(
+				SuperWeChatApplication.currentUserNick.trim());
+		if (!updatenick) {
+			Log.e("LoginActivity", "update current user nick fail");
+		}
+		if (!LoginActivity.this.isFinishing() && pd.isShowing()) {
+			pd.dismiss();
+		}
+		// 进入主页面
+		Intent intent = new Intent(LoginActivity.this,
+				MainActivity.class);
+		startActivity(intent);
+		finish();
+	}
+
+	private void save2SD() {
+		OkHttpUtils<Bitmap> utils = new OkHttpUtils<Bitmap>();
+		utils.url(SuperWeChatApplication.ROOT_SERVER)
+				.addParam(I.KEY_REQUEST,I.REQUEST_DOWNLOAD_AVATAR)
+				.addParam(I.AVATAR_TYPE,currentUsername)
+				.execute(new OkHttpUtils.OnCompleteListener<Bitmap>() {
+					@Override
+					public void onSuccess(Bitmap result) {
+						if (result != null) {
+							File file1 = new File(ImageUtils.getAvatarpath(mContext, I.AVATAR_TYPE_USER_PATH), currentUsername + I.AVATAR_SUFFIX_JPG);
+							File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+							File file = new File(dir, currentUsername + I.AVATAR_SUFFIX_JPG);
+							try {
+								FileInputStream fis = new FileInputStream(file1);
+								FileOutputStream out = new FileOutputStream(file);
+								byte[] bytes = new byte[1024];
+								int b = 0;
+								while ((b = fis.read()) != -1) {
+									out.write(bytes,0,b);
+								}
+							} catch (FileNotFoundException e) {
+								e.printStackTrace();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+
+					@Override
+					public void onError(String error) {
+
+					}
+				});
+	}
+
+	private void showProgressDialog() {
+		progressShow = true;
+		pd = new ProgressDialog(LoginActivity.this);
+		pd.setCanceledOnTouchOutside(false);
+		pd.setOnCancelListener(new OnCancelListener() {
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				progressShow = false;
+			}
+		});
+		pd.setMessage(getString(R.string.Is_landing));
+		pd.show();
+	}
+
 	private void initializeContacts() {
 		Map<String, EMUser> userlist = new HashMap<String, EMUser>();
 		// 添加user"申请与通知"
@@ -233,7 +348,7 @@ public class LoginActivity extends BaseActivity {
 		groupUser.setNick(strGroup);
 		groupUser.setHeader("");
 		userlist.put(Constant.GROUP_USERNAME, groupUser);
-		
+
 		// 添加"Robot"
 		EMUser robotUser = new EMUser();
 		String strRobot = getResources().getString(R.string.robot_chat);
@@ -241,7 +356,7 @@ public class LoginActivity extends BaseActivity {
 		robotUser.setNick(strRobot);
 		robotUser.setHeader("");
 		userlist.put(Constant.CHAT_ROBOT, robotUser);
-		
+
 		// 存入内存
 		((DemoHXSDKHelper)HXSDKHelper.getInstance()).setContactList(userlist);
 		// 存入db
@@ -249,7 +364,7 @@ public class LoginActivity extends BaseActivity {
 		List<EMUser> users = new ArrayList<EMUser>(userlist.values());
 		dao.saveContactList(users);
 	}
-	
+
 	/**
 	 * 注册
 	 *

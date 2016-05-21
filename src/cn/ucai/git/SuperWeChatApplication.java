@@ -25,6 +25,7 @@ import cn.ucai.git.bean.Contact;
 import cn.ucai.git.bean.Group;
 import cn.ucai.git.bean.Member;
 import cn.ucai.git.bean.User;
+import cn.ucai.git.data.RequestManager;
 
 public class SuperWeChatApplication extends Application {
 
@@ -66,6 +67,7 @@ public class SuperWeChatApplication extends Application {
          * }
          */
         hxSDKHelper.onInit(applicationContext);
+		RequestManager.init(applicationContext);
 	}
 
 	public static SuperWeChatApplication getInstance() {
