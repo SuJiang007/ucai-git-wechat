@@ -5,11 +5,16 @@ import android.text.TextUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import cn.ucai.git.I;
+import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.applib.controller.HXSDKHelper;
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
+import cn.ucai.git.bean.Contact;
+import cn.ucai.git.data.RequestManager;
 import cn.ucai.git.domain.EMUser;
 
+import com.android.volley.toolbox.NetworkImageView;
 import com.squareup.picasso.Picasso;
 
 public class UserUtils {
@@ -31,8 +36,13 @@ public class UserUtils {
         }
         return user;
     }
-    
-    /**
+
+	public static Contact getUserBeanInfo(String username) {
+		Contact contact = SuperWeChatApplication.getInstance().getMap().get(username);
+		return contact;
+	}
+
+	/**
      * 设置用户头像
      * @param username
      */
@@ -44,7 +54,21 @@ public class UserUtils {
             Picasso.with(context).load(R.drawable.default_avatar).into(imageView);
         }
     }
-    
+
+	public static void setAvatarInfo(String username, NetworkImageView imageView) {
+		Contact contact = getUserBeanInfo(username);
+		if (contact != null && contact.getMContactCname() != null) {
+			imageView.setDefaultImageResId(R.drawable.default_image);
+			imageView.setImageUrl(getAvatarUrl(username), RequestManager.getImageLoader());
+			imageView.setErrorImageResId(R.drawable.default_image);
+		}
+	}
+
+	private static String getAvatarUrl(String username) {
+		if (username ==null || username.isEmpty()) return null;
+		return I.REQUEST_DOWNLOAD_AVATAR_USER + username;
+	}
+
     /**
      * 设置当前用户头像
      */
@@ -56,8 +80,8 @@ public class UserUtils {
 			Picasso.with(context).load(R.drawable.default_avatar).into(imageView);
 		}
 	}
-    
-    /**
+
+	/**
      * 设置用户昵称
      */
     public static void setUserNick(String username,TextView textView){
@@ -81,7 +105,7 @@ public class UserUtils {
     
     /**
      * 保存或更新某个用户
-     * @param user
+     * @param newUser
      */
 	public static void saveUserInfo(EMUser newUser) {
 		if (newUser == null || newUser.getUsername() == null) {

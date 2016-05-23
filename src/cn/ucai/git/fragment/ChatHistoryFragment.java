@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.ucai.git.activity;
+package cn.ucai.git.fragment;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +46,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import cn.ucai.git.activity.ChatActivity;
+import cn.ucai.git.activity.MainActivity;
 import cn.ucai.git.applib.controller.HXSDKHelper;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMContact;

@@ -1,4 +1,4 @@
-package cn.ucai.git.activity;
+package cn.ucai.git.fragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import cn.ucai.git.BuildConfig;
 import cn.ucai.git.R;
+import cn.ucai.git.activity.RecorderVideoActivity;
 import cn.ucai.git.domain.VideoEntity;
 import cn.ucai.git.video.util.ImageCache;
 import cn.ucai.git.video.util.ImageResizer;

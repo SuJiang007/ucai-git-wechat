@@ -31,6 +31,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Message;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -48,6 +49,9 @@ import cn.ucai.git.applib.controller.HXSDKHelper;
 import com.easemob.chat.EMChat;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMGroupManager;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.Request;
+
 import cn.ucai.git.Constant;
 import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.DemoHXSDKHelper;
@@ -60,7 +64,11 @@ import cn.ucai.git.data.OkHttpUtils;
 import cn.ucai.git.db.EMUserDao;
 import cn.ucai.git.db.UserDao;
 import cn.ucai.git.domain.EMUser;
+import cn.ucai.git.listener.OnSetAvatarListener;
+import cn.ucai.git.task.DownloadAllGroupTask;
+import cn.ucai.git.task.DownloadContactListTask;
 import cn.ucai.git.task.DownloadImageTask;
+import cn.ucai.git.task.DownloadPublicGroupTask;
 import cn.ucai.git.utils.BitmapUtils;
 import cn.ucai.git.utils.CommonUtils;
 import cn.ucai.git.utils.ImageLoader;
@@ -219,7 +227,8 @@ public class LoginActivity extends BaseActivity {
 	}
 
 	private Response.Listener<User> responseListener() {
-		return new Response.Listener<User>() {
+		return
+				new Response.Listener<User>() {
 			@Override
 			public void onResponse(User user) {
 				if (user.isResult()) {
@@ -250,6 +259,14 @@ public class LoginActivity extends BaseActivity {
 			EMGroupManager.getInstance().loadAllGroups();
 			EMChatManager.getInstance().loadAllConversations();
 			// 处理好友和群组
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					new DownloadAllGroupTask(currentUsername, mContext).execute();
+					new DownloadContactListTask(currentUsername,mContext).execute();
+					new DownloadPublicGroupTask(I.PAGE_ID_DEFAULT, I.PAGE_SIZE_DEFAULT, currentUsername, mContext).execute();
+				}
+			});
 			initializeContacts();
 			//下载用户头像
 			save2SD();
@@ -282,38 +299,26 @@ public class LoginActivity extends BaseActivity {
 	}
 
 	private void save2SD() {
-		OkHttpUtils<Bitmap> utils = new OkHttpUtils<Bitmap>();
+		final OkHttpUtils<Message> utils = new OkHttpUtils<Message>();
 		utils.url(SuperWeChatApplication.ROOT_SERVER)
 				.addParam(I.KEY_REQUEST,I.REQUEST_DOWNLOAD_AVATAR)
 				.addParam(I.AVATAR_TYPE,currentUsername)
-				.execute(new OkHttpUtils.OnCompleteListener<Bitmap>() {
+				.doInBackground(new Callback() {
 					@Override
-					public void onSuccess(Bitmap result) {
-						if (result != null) {
-							File file1 = new File(ImageUtils.getAvatarpath(mContext, I.AVATAR_TYPE_USER_PATH), currentUsername + I.AVATAR_SUFFIX_JPG);
-							File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-							File file = new File(dir, currentUsername + I.AVATAR_SUFFIX_JPG);
-							try {
-								FileInputStream fis = new FileInputStream(file1);
-								FileOutputStream out = new FileOutputStream(file);
-								byte[] bytes = new byte[1024];
-								int b = 0;
-								while ((b = fis.read()) != -1) {
-									out.write(bytes,0,b);
-								}
-							} catch (FileNotFoundException e) {
-								e.printStackTrace();
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}
+					public void onFailure(Request request, IOException e) {
+
 					}
 
 					@Override
-					public void onError(String error) {
-
+					public void onResponse(com.squareup.okhttp.Response response) throws IOException {
+						String avatarPath = I.AVATAR_TYPE_USER_PATH + I.BACKSLASH
+								+ currentUsername + I.AVATAR_SUFFIX_JPG;
+						File file = OnSetAvatarListener.getAvatarFile(LoginActivity.this, avatarPath);
+						FileOutputStream out = null;
+						out = new FileOutputStream(file);
+						utils.downloadFile(response,file,false);
 					}
-				});
+				}).execute(null);
 	}
 
 	private void showProgressDialog() {
@@ -350,12 +355,12 @@ public class LoginActivity extends BaseActivity {
 		userlist.put(Constant.GROUP_USERNAME, groupUser);
 
 		// 添加"Robot"
-		EMUser robotUser = new EMUser();
-		String strRobot = getResources().getString(R.string.robot_chat);
-		robotUser.setUsername(Constant.CHAT_ROBOT);
-		robotUser.setNick(strRobot);
-		robotUser.setHeader("");
-		userlist.put(Constant.CHAT_ROBOT, robotUser);
+//		EMUser robotUser = new EMUser();
+//		String strRobot = getResources().getString(R.string.robot_chat);
+//		robotUser.setUsername(Constant.CHAT_ROBOT);
+//		robotUser.setNick(strRobot);
+//		robotUser.setHeader("");
+//		userlist.put(Constant.CHAT_ROBOT, robotUser);
 
 		// 存入内存
 		((DemoHXSDKHelper)HXSDKHelper.getInstance()).setContactList(userlist);

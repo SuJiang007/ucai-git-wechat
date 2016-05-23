@@ -1,4 +1,4 @@
-package cn.ucai.git.activity;
+package cn.ucai.git.fragment;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +39,8 @@ import com.easemob.chat.EMConversation;
 import com.easemob.chat.EMConversation.EMConversationType;
 import cn.ucai.git.Constant;
 import cn.ucai.git.SuperWeChatApplication;
+import cn.ucai.git.activity.ChatActivity;
+import cn.ucai.git.activity.MainActivity;
 import cn.ucai.git.adapter.ChatAllHistoryAdapter;
 import cn.ucai.git.db.InviteMessgeDao;
 

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.ucai.git.activity;
+package cn.ucai.git.fragment;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -30,14 +30,21 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.easemob.EMCallBack;
-import cn.ucai.git.applib.controller.HXSDKHelper;
-
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMChatOptions;
+
 import cn.ucai.git.Constant;
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.DemoHXSDKModel;
 import cn.ucai.git.R;
+import cn.ucai.git.SuperWeChatApplication;
+import cn.ucai.git.activity.BlacklistActivity;
+import cn.ucai.git.activity.DiagnoseActivity;
+import cn.ucai.git.activity.LoginActivity;
+import cn.ucai.git.activity.MainActivity;
+import cn.ucai.git.activity.OfflinePushNickActivity;
+import cn.ucai.git.activity.UserProfileActivity;
+import cn.ucai.git.applib.controller.HXSDKHelper;
 
 /**
  * 设置界面
@@ -358,6 +365,11 @@ public class SettingsFragment extends Fragment implements OnClickListener {
 				getActivity().runOnUiThread(new Runnable() {
 					public void run() {
 						pd.dismiss();
+						SuperWeChatApplication instance = SuperWeChatApplication.getInstance();
+						instance.getContactArrayList().clear();
+						instance.getGroupArrayList().clear();
+						instance.getPublicArrayList().clear();
+						instance.getMap().clear();
 						// 重新显示登陆页面
 						((MainActivity) getActivity()).finish();
 						startActivity(new Intent(getActivity(), LoginActivity.class));
