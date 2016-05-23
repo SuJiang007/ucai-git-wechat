@@ -92,8 +92,20 @@ public class UserUtils {
     		textView.setText(username);
     	}
     }
-    
-    /**
+
+	public static void setContactNick(String username, TextView tv) {
+		Contact contact = getUserBeanInfo(username);
+		if (contact.getMUserNick() != null) {
+			tv.setText(contact.getMUserNick());
+		} else if (contact.getMContactCname() != null){
+			tv.setText(contact.getMContactCname());
+		}
+		if (contact.getMUserNick() == null) {
+			tv.setText(username);
+		}
+	}
+
+	/**
      * 设置当前用户昵称
      */
     public static void setCurrentUserNick(TextView textView){
