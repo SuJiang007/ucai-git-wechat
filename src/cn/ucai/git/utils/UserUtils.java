@@ -5,16 +5,19 @@ import android.text.TextUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import cn.ucai.git.Constant;
 import cn.ucai.git.I;
 import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.applib.controller.HXSDKHelper;
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
 import cn.ucai.git.bean.Contact;
+import cn.ucai.git.bean.User;
 import cn.ucai.git.data.RequestManager;
 import cn.ucai.git.domain.EMUser;
 
 import com.android.volley.toolbox.NetworkImageView;
+import com.easemob.util.HanziToPinyin;
 import com.squareup.picasso.Picasso;
 
 public class UserUtils {
@@ -55,13 +58,18 @@ public class UserUtils {
         }
     }
 
-	public static void setAvatarInfo(String username, NetworkImageView imageView) {
+	public static void setUserBeanAvatar(String username, NetworkImageView imageView) {
 		Contact contact = getUserBeanInfo(username);
 		if (contact != null && contact.getMContactCname() != null) {
-			imageView.setDefaultImageResId(R.drawable.default_image);
-			imageView.setImageUrl(getAvatarUrl(username), RequestManager.getImageLoader());
-			imageView.setErrorImageResId(R.drawable.default_image);
+			setUserAvatar(getAvatarUrl(username),imageView);
 		}
+	}
+
+	private static void setUserAvatar(String url,NetworkImageView imageView) {
+		if (url == null || url.isEmpty()) return;
+		imageView.setDefaultImageResId(R.drawable.default_image);
+		imageView.setImageUrl(url, RequestManager.getImageLoader());
+		imageView.setErrorImageResId(R.drawable.default_image);
 	}
 
 	private static String getAvatarUrl(String username) {
@@ -78,6 +86,13 @@ public class UserUtils {
 			Picasso.with(context).load(user.getAvatar()).placeholder(R.drawable.default_avatar).into(imageView);
 		} else {
 			Picasso.with(context).load(R.drawable.default_avatar).into(imageView);
+		}
+	}
+
+	public static void setCurrentUserAvatar(NetworkImageView imageView) {
+		User user = SuperWeChatApplication.getInstance().getUser();
+		if (user != null) {
+			setUserAvatar(getAvatarUrl(user.getMUserName()), imageView);
 		}
 	}
 
@@ -124,6 +139,28 @@ public class UserUtils {
 			return;
 		}
 		((DemoHXSDKHelper) HXSDKHelper.getInstance()).saveContact(newUser);
+	}
+
+	public static void setUserHearder(String username, Contact user) {
+		String headerName = null;
+		if (!TextUtils.isEmpty(user.getMUserNick())) {
+			headerName = user.getMUserNick();
+		} else {
+			headerName = user.getMContactCname();
+		}
+		if (username.equals(Constant.NEW_FRIENDS_USERNAME)
+				|| username.equals(Constant.GROUP_USERNAME)) {
+			user.setHeader("");
+		} else if (Character.isDigit(headerName.charAt(0))) {
+			user.setHeader("#");
+		} else {
+			user.setHeader(HanziToPinyin.getInstance().get(headerName.substring(0, 1)).get(0).target.substring(0, 1)
+					.toUpperCase());
+			char header = user.getHeader().toLowerCase().charAt(0);
+			if (header < 'a' || header > 'z') {
+				user.setHeader("#");
+			}
+		}
 	}
     
 }

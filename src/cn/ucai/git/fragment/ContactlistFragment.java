@@ -22,8 +22,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -49,6 +51,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import cn.ucai.git.R;
+import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.activity.AddContactActivity;
 import cn.ucai.git.activity.ChatActivity;
 import cn.ucai.git.activity.GroupsActivity;
@@ -62,9 +66,12 @@ import com.easemob.chat.EMContactManager;
 import cn.ucai.git.Constant;
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.adapter.ContactAdapter;
+import cn.ucai.git.bean.Contact;
+import cn.ucai.git.bean.User;
 import cn.ucai.git.db.InviteMessgeDao;
 import cn.ucai.git.db.EMUserDao;
 import cn.ucai.git.domain.EMUser;
+import cn.ucai.git.utils.UserUtils;
 import cn.ucai.git.widget.Sidebar;
 import com.easemob.exceptions.EaseMobException;
 import com.easemob.util.EMLog;
@@ -77,6 +84,7 @@ public class ContactlistFragment extends Fragment {
 	public static final String TAG = "ContactlistFragment";
 	private ContactAdapter adapter;
 	private List<EMUser> contactList;
+	private List<Contact> mContactList;
 	private ListView listView;
 	private boolean hidden;
 	private Sidebar sidebar;
@@ -107,7 +115,7 @@ public class ContactlistFragment extends Fragment {
                                 refresh();
 		                    }else{
 		                        String s1 = getResources().getString(cn.ucai.git.R.string.get_failed_please_check);
-		                        Toast.makeText(getActivity(), s1, 1).show();
+		                        Toast.makeText(getActivity(), s1, Toast.LENGTH_SHORT).show();
 		                        progressBar.setVisibility(View.GONE);
 		                    }
 		                }
@@ -177,75 +185,11 @@ public class ContactlistFragment extends Fragment {
 		getContactList();
 		
 		//搜索框
-		query = (EditText) getView().findViewById(cn.ucai.git.R.id.query);
-		query.setHint(cn.ucai.git.R.string.search);
-		clearSearch = (ImageButton) getView().findViewById(cn.ucai.git.R.id.search_clear);
-		query.addTextChangedListener(new TextWatcher() {
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				adapter.getFilter().filter(s);
-				if (s.length() > 0) {
-					clearSearch.setVisibility(View.VISIBLE);
-				} else {
-					clearSearch.setVisibility(View.INVISIBLE);
-					
-				}
-			}
+		setContactItemClickListener();
 
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-			}
-
-			public void afterTextChanged(Editable s) {
-			}
-		});
-		clearSearch.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				query.getText().clear();
-				hideSoftKeyboard();
-			}
-		});
-		
 		// 设置adapter
-		adapter = new ContactAdapter(getActivity(), cn.ucai.git.R.layout.row_contact, contactList);
-		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				String username = adapter.getItem(position).getUsername();
-				if (Constant.NEW_FRIENDS_USERNAME.equals(username)) {
-					// 进入申请与通知页面
-					EMUser user = ((DemoHXSDKHelper)HXSDKHelper.getInstance()).getContactList().get(Constant.NEW_FRIENDS_USERNAME);
-					user.setUnreadMsgCount(0);
-					startActivity(new Intent(getActivity(), NewFriendsMsgActivity.class));
-				} else if (Constant.GROUP_USERNAME.equals(username)) {
-					// 进入群聊列表页面
-					startActivity(new Intent(getActivity(), GroupsActivity.class));
-				} else if(Constant.CHAT_ROOM.equals(username)){
-					//进入聊天室列表页面
-				    startActivity(new Intent(getActivity(), PublicChatRoomsActivity.class));
-				}else if(Constant.CHAT_ROBOT.equals(username)){
-					//进入Robot列表页面
-					startActivity(new Intent(getActivity(), RobotsActivity.class));
-				}else {
-					// demo中直接进入聊天页面，实际一般是进入用户详情页
-					startActivity(new Intent(getActivity(), ChatActivity.class).putExtra("userId", adapter.getItem(position).getUsername()));
-				}
-			}
-		});
-		listView.setOnTouchListener(new OnTouchListener() {
-
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				// 隐藏软键盘
-				if (getActivity().getWindow().getAttributes().softInputMode != WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN) {
-					if (getActivity().getCurrentFocus() != null)
-						inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(),
-								InputMethodManager.HIDE_NOT_ALWAYS);
-				}
-				return false;
-			}
-		});
+		setContactListTouchListener();
+		setAddContactListener();
 
 		ImageView addContactView = (ImageView) getView().findViewById(cn.ucai.git.R.id.iv_new_contact);
 		// 进入添加好友页
@@ -274,6 +218,83 @@ public class ContactlistFragment extends Fragment {
 		} else {
 			progressBar.setVisibility(View.GONE);
 		}
+		registerContactListChangedReceiver();
+	}
+
+	private void setAddContactListener() {
+		listView.setOnTouchListener(new OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				// 隐藏软键盘
+				if (getActivity().getWindow().getAttributes().softInputMode != WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN) {
+					if (getActivity().getCurrentFocus() != null)
+						inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(),
+								InputMethodManager.HIDE_NOT_ALWAYS);
+				}
+				return false;
+			}
+		});
+	}
+
+	private void setContactListTouchListener() {
+		adapter = new ContactAdapter(getActivity(), cn.ucai.git.R.layout.row_contact, contactList);
+		listView.setAdapter(adapter);
+		listView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				String username = adapter.getItem(position).getUsername();
+				if (Constant.NEW_FRIENDS_USERNAME.equals(username)) {
+					// 进入申请与通知页面
+					EMUser user = ((DemoHXSDKHelper) HXSDKHelper.getInstance()).getContactList().get(Constant.NEW_FRIENDS_USERNAME);
+					user.setUnreadMsgCount(0);
+					startActivity(new Intent(getActivity(), NewFriendsMsgActivity.class));
+				} else if (Constant.GROUP_USERNAME.equals(username)) {
+					// 进入群聊列表页面
+					startActivity(new Intent(getActivity(), GroupsActivity.class));
+				} else if(Constant.CHAT_ROOM.equals(username)){
+					//进入聊天室列表页面
+				    startActivity(new Intent(getActivity(), PublicChatRoomsActivity.class));
+				}else if(Constant.CHAT_ROBOT.equals(username)){
+					//进入Robot列表页面
+					startActivity(new Intent(getActivity(), RobotsActivity.class));
+				}else {
+					// demo中直接进入聊天页面，实际一般是进入用户详情页
+					startActivity(new Intent(getActivity(), ChatActivity.class).putExtra("userId", adapter.getItem(position).getUsername()));
+				}
+			}
+		});
+	}
+
+	private void setContactItemClickListener() {
+		query = (EditText) getView().findViewById(cn.ucai.git.R.id.query);
+		query.setHint(cn.ucai.git.R.string.search);
+		clearSearch = (ImageButton) getView().findViewById(cn.ucai.git.R.id.search_clear);
+		query.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				adapter.getFilter().filter(s);
+				if (s.length() > 0) {
+					clearSearch.setVisibility(View.VISIBLE);
+				} else {
+					clearSearch.setVisibility(View.INVISIBLE);
+
+				}
+			}
+
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+
+			public void afterTextChanged(Editable s) {
+			}
+		});
+		clearSearch.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				query.getText().clear();
+				hideSoftKeyboard();
+			}
+		});
 	}
 
 	@Override
@@ -326,7 +347,7 @@ public class ContactlistFragment extends Fragment {
 	/**
 	 * 删除联系人
 	 * 
-	 * @param toDeleteUser
+	 * @param
 	 */
 	public void deleteContact(final EMUser tobeDeleteUser) {
 		String st1 = getResources().getString(cn.ucai.git.R.string.deleting);
@@ -355,7 +376,7 @@ public class ContactlistFragment extends Fragment {
 					getActivity().runOnUiThread(new Runnable() {
 						public void run() {
 							pd.dismiss();
-							Toast.makeText(getActivity(), st2 + e.getMessage(), 1).show();
+							Toast.makeText(getActivity(), st2 + e.getMessage(), Toast.LENGTH_SHORT).show();
 						}
 					});
 
@@ -385,7 +406,7 @@ public class ContactlistFragment extends Fragment {
 					getActivity().runOnUiThread(new Runnable() {
 						public void run() {
 							pd.dismiss();
-							Toast.makeText(getActivity(), st2, 0).show();
+							Toast.makeText(getActivity(), st2, Toast.LENGTH_SHORT).show();
 							refresh();
 						}
 					});
@@ -394,7 +415,7 @@ public class ContactlistFragment extends Fragment {
 					getActivity().runOnUiThread(new Runnable() {
 						public void run() {
 							pd.dismiss();
-							Toast.makeText(getActivity(), st3, 0).show();
+							Toast.makeText(getActivity(), st3, Toast.LENGTH_SHORT).show();
 						}
 					});
 				}
@@ -432,6 +453,9 @@ public class ContactlistFragment extends Fragment {
 		if(contactInfoSyncListener != null){
 			((DemoHXSDKHelper)HXSDKHelper.getInstance()).getUserProfileManager().removeSyncContactInfoListener(contactInfoSyncListener);
 		}
+		if (mReceiver != null) {
+			getActivity().unregisterReceiver(mReceiver);
+		}
 		super.onDestroy();
 	}
 	
@@ -449,44 +473,45 @@ public class ContactlistFragment extends Fragment {
 	 * 获取联系人列表，并过滤掉黑名单和排序
 	 */
 	private void getContactList() {
-		contactList.clear();
+//		contactList.clear();
+		mContactList.clear();
 		//获取本地好友列表
-		Map<String, EMUser> users = ((DemoHXSDKHelper)HXSDKHelper.getInstance()).getContactList();
-		if (users==null){
-			return;
+		ArrayList<Contact> contactArrayList = SuperWeChatApplication.getInstance().getContactArrayList();
+		mContactList.addAll(contactArrayList);
+		//添加群聊
+		Contact groupUser = new Contact();
+		String strGroups = getActivity().getString(R.string.group_chat);
+		groupUser.setMContactCname(Constant.GROUP_USERNAME);
+		groupUser.setMUserName(Constant.GROUP_USERNAME);
+		groupUser.setMUserNick(strGroups);
+		if (contactArrayList.indexOf(groupUser)==-1) {
+			mContactList.add(0,groupUser);
 		}
-		Iterator<Entry<String, EMUser>> iterator = users.entrySet().iterator();
-		while (iterator.hasNext()) {
-			Entry<String, EMUser> entry = iterator.next();
-			if (!entry.getKey().equals(Constant.NEW_FRIENDS_USERNAME)
-			        && !entry.getKey().equals(Constant.GROUP_USERNAME)
-			        && !entry.getKey().equals(Constant.CHAT_ROOM)
-					&& !entry.getKey().equals(Constant.CHAT_ROBOT)
-					&& !blackList.contains(entry.getKey()))
-				contactList.add(entry.getValue());
+
+		//添加申请与通知
+
+		Contact newFriends = new Contact();
+		String strChat = getActivity().getString(R.string.Application_and_notify);
+		newFriends.setMContactCname(Constant.GROUP_USERNAME);
+		newFriends.setMUserName(Constant.GROUP_USERNAME);
+		newFriends.setMUserNick(strChat);
+		if (contactArrayList.indexOf(newFriends)==-1){
+			mContactList.add(0,newFriends);
 		}
+
+		for (Contact contact : mContactList) {
+			UserUtils.setUserHearder(contact.getMContactCname(),contact);
+		}
+
 		// 排序
-		Collections.sort(contactList, new Comparator<EMUser>() {
+		Collections.sort(this.mContactList, new Comparator<Contact>() {
 
 			@Override
-			public int compare(EMUser lhs, EMUser rhs) {
-				return lhs.getUsername().compareTo(rhs.getUsername());
+			public int compare(Contact lhs, Contact rhs) {
+				return lhs.getHeader().compareTo(rhs.getHeader());
 			}
 		});
-//
-//		if(users.get(Constant.CHAT_ROBOT)!=null){
-//			contactList.add(0, users.get(Constant.CHAT_ROBOT));
-//		}
-		// 加入"群聊"和"聊天室"
-//        if(users.get(Constant.CHAT_ROOM) != null)
-//            contactList.add(0, users.get(Constant.CHAT_ROOM));
-        if(users.get(Constant.GROUP_USERNAME) != null)
-            contactList.add(0, users.get(Constant.GROUP_USERNAME));
-        
-		// 把"申请与通知"添加到首位
-		if(users.get(Constant.NEW_FRIENDS_USERNAME) != null)
-		    contactList.add(0, users.get(Constant.NEW_FRIENDS_USERNAME));
-		
+
 	}
 	
 	void hideSoftKeyboard() {
@@ -506,5 +531,20 @@ public class ContactlistFragment extends Fragment {
 	    	outState.putBoolean(Constant.ACCOUNT_REMOVED, true);
 	    }
 	    
+	}
+
+	class ContactListChangedReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			refresh();
+		}
+	}
+
+	ContactListChangedReceiver mReceiver;
+	private void registerContactListChangedReceiver() {
+		mReceiver = new ContactListChangedReceiver();
+		IntentFilter filter = new IntentFilter("update_contact_list");
+		getActivity().registerReceiver(mReceiver, filter);
 	}
 }

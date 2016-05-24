@@ -33,7 +33,7 @@ public class SuperWeChatApplication extends Application {
 	private static SuperWeChatApplication instance;
 	// login user name
 	public final String PREF_USERNAME = "username";
-
+//"http://115.28.2.61:8080/SuperWeChatServer/Server"
 	public static String ROOT_SERVER = "http://10.0.2.2:9999/SuperWeChatServer/Server";
 	
 	/**

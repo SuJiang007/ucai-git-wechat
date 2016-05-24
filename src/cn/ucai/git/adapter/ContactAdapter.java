@@ -25,7 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Filter;
-import android.widget.ImageView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
@@ -125,7 +124,7 @@ public class ContactAdapter extends ArrayAdapter<EMUser>  implements SectionInde
 //		    holder.nameTextview.setText(user.getNick());
 		    //设置用户头像
 //			UserUtils.setUserAvatar(getContext(), username, holder.avatar);
-			UserUtils.setAvatarInfo(username,holder.avatar);
+			UserUtils.setUserBeanAvatar(username,holder.avatar);
 			UserUtils.setContactNick(username,holder.nameTextview);
 			if(holder.unreadMsgView != null)
 			    holder.unreadMsgView.setVisibility(View.INVISIBLE);
