@@ -68,6 +68,9 @@ public class AddContactActivity extends BaseActivity{
 	public void searchContact(View v) {
 		final String name = editText.getText().toString();
 		String saveText = searchBtn.getText().toString();
+		if (getString(R.string.button_search).equals(saveText)) {
+
+		}
 		
 		if (getString(R.string.button_search).equals(saveText)) {
 			toAddUsername = name;
