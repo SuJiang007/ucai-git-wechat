@@ -120,8 +120,8 @@ public class AddContactActivity extends BaseActivity {
             @Override
             public void onResponse(User user) {
                 if (user != null) {
-                    if (SuperWeChatApplication.getInstance().getMap().
-                            containsKey(user.getMUserName())) {
+                    if (SuperWeChatApplication.getInstance().
+                            getMap().containsKey(user.getMUserName())) {
                         startActivity(new Intent(AddContactActivity.this, UserProfileActivity.class).
                                 putExtra("username", user.getMUserName()));
                     } else {

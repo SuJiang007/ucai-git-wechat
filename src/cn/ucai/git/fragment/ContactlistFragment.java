@@ -13,14 +13,6 @@
  */
 package cn.ucai.git.fragment;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -51,6 +43,19 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.android.volley.Response;
+import com.easemob.chat.EMContactManager;
+import com.easemob.exceptions.EaseMobException;
+import com.easemob.util.EMLog;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import cn.ucai.git.Constant;
+import cn.ucai.git.DemoHXSDKHelper;
+import cn.ucai.git.I;
 import cn.ucai.git.R;
 import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.activity.AddContactActivity;
@@ -60,20 +65,17 @@ import cn.ucai.git.activity.MainActivity;
 import cn.ucai.git.activity.NewFriendsMsgActivity;
 import cn.ucai.git.activity.PublicChatRoomsActivity;
 import cn.ucai.git.activity.RobotsActivity;
+import cn.ucai.git.adapter.ContactAdapter;
 import cn.ucai.git.applib.controller.HXSDKHelper;
 import cn.ucai.git.applib.controller.HXSDKHelper.HXSyncListener;
-import com.easemob.chat.EMContactManager;
-import cn.ucai.git.Constant;
-import cn.ucai.git.DemoHXSDKHelper;
-import cn.ucai.git.adapter.ContactAdapter;
 import cn.ucai.git.bean.Contact;
-import cn.ucai.git.db.InviteMessgeDao;
+import cn.ucai.git.data.ApiParams;
+import cn.ucai.git.data.GsonRequest;
 import cn.ucai.git.db.EMUserDao;
+import cn.ucai.git.db.InviteMessgeDao;
 import cn.ucai.git.domain.EMUser;
 import cn.ucai.git.utils.UserUtils;
 import cn.ucai.git.widget.Sidebar;
-import com.easemob.exceptions.EaseMobException;
-import com.easemob.util.EMLog;
 
 /**
  * 联系人列表页
@@ -354,6 +356,16 @@ public class ContactlistFragment extends Fragment {
 		pd.setMessage(st1);
 		pd.setCanceledOnTouchOutside(false);
 		pd.show();
+		try {
+			String path = new ApiParams()
+                    .with(I.Contact.USER_NAME, SuperWeChatApplication.getInstance().getUserName())
+                    .with(I.Contact.CU_NAME, tobeDeleteUser.getMContactCname())
+                    .getRequestUrl(I.REQUEST_DELETE_CONTACT);
+			((MainActivity)getActivity()).executeRequest(new GsonRequest<Boolean>(path,Boolean.class,
+					responseDeletContactListener(tobeDeleteUser),((MainActivity)getActivity()).errorListener()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		new Thread(new Runnable() {
 			public void run() {
 				try {
@@ -383,6 +395,19 @@ public class ContactlistFragment extends Fragment {
 			}
 		}).start();
 
+	}
+
+	private Response.Listener<Boolean> responseDeletContactListener(final Contact tobeDeleteUser) {
+		return new Response.Listener<Boolean>() {
+			@Override
+			public void onResponse(Boolean aBoolean) {
+				if (aBoolean) {
+					SuperWeChatApplication.getInstance().getMap().remove(tobeDeleteUser);
+					SuperWeChatApplication.getInstance().getContactArrayList().remove(tobeDeleteUser.getMContactCname());
+					getActivity().sendStickyBroadcast(new Intent("update_contact_list"));
+				}
+			}
+		};
 	}
 
 	/**
@@ -491,8 +516,8 @@ public class ContactlistFragment extends Fragment {
 
 		Contact newFriends = new Contact();
 		String strChat = getActivity().getString(R.string.Application_and_notify);
-		newFriends.setMContactCname(Constant.GROUP_USERNAME);
-		newFriends.setMUserName(Constant.GROUP_USERNAME);
+		newFriends.setMContactCname(Constant.NEW_FRIENDS_USERNAME);
+		newFriends.setMUserName(Constant.NEW_FRIENDS_USERNAME);
 		newFriends.setMUserNick(strChat);
 		newFriends.setMContactId(-1);
 		if (contactArrayList.indexOf(newFriends)==-1){
