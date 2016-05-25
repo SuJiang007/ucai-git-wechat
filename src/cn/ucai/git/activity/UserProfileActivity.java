@@ -22,6 +22,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.toolbox.NetworkImageView;
 import com.easemob.EMValueCallBack;
 import cn.ucai.git.applib.controller.HXSDKHelper;
 import com.easemob.chat.EMChatManager;
@@ -35,7 +36,7 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
 	
 	private static final int REQUESTCODE_PICK = 1;
 	private static final int REQUESTCODE_CUTTING = 2;
-	private ImageView headAvatar;
+	private NetworkImageView headAvatar;
 	private ImageView headPhotoUpdate;
 	private ImageView iconRightArrow;
 	private TextView tvNickName;
@@ -54,7 +55,7 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
 	}
 	
 	private void initView() {
-		headAvatar = (ImageView) findViewById(R.id.user_head_avatar);
+		headAvatar = (NetworkImageView) findViewById(R.id.user_head_avatar);
 		headPhotoUpdate = (ImageView) findViewById(R.id.user_head_headphoto_update);
 		tvUsername = (TextView) findViewById(R.id.user_username);
 		tvNickName = (TextView) findViewById(R.id.user_nickname);
