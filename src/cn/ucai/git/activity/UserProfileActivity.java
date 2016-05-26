@@ -1,14 +1,15 @@
 package cn.ucai.git.activity;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -32,16 +33,19 @@ import cn.ucai.git.I;
 import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.applib.controller.HXSDKHelper;
 
-import com.easemob.chat.EMChatManager;
 
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
+import cn.ucai.git.bean.Message;
 import cn.ucai.git.bean.User;
 import cn.ucai.git.data.ApiParams;
 import cn.ucai.git.data.GsonRequest;
+import cn.ucai.git.data.MultipartRequest;
+import cn.ucai.git.data.RequestManager;
 import cn.ucai.git.db.UserDao;
 import cn.ucai.git.domain.EMUser;
 import cn.ucai.git.listener.OnSetAvatarListener;
+import cn.ucai.git.utils.ImageUtils;
 import cn.ucai.git.utils.UserUtils;
 import cn.ucai.git.utils.Utils;
 
@@ -109,7 +113,7 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.user_head_avatar:
-                mOnSetAvatarListener = new OnSetAvatarListener(mContext, R.id.layout_user_profile, getAvatar(), I.AVATAR_SUFFIX_JPG);
+                mOnSetAvatarListener = new OnSetAvatarListener(mContext, R.id.layout_user_profile, getAvatar(), I.AVATAR_TYPE_USER_PATH);
 //                uploadHeadPhoto();
                 break;
             case R.id.rl_nickname:
@@ -272,18 +276,71 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
                 break;
         }*/
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK) {
-            return;
-        }
         mOnSetAvatarListener.setAvatar(requestCode,data,headAvatar);
-        if (requestCode == mOnSetAvatarListener.REQUEST_CROP_PHOTO) {
+        if (resultCode == RESULT_OK &&requestCode == mOnSetAvatarListener.REQUEST_CROP_PHOTO) {
+            RequestManager.getRequestQueue().getCache().remove(UserUtils.getAvatarUrl(
+                    SuperWeChatApplication.getInstance().getUserName()
+            ));
             updateUserAvatar();
+
+        }
+
+    }
+
+    private final String boundary = "apiclient-" + System.currentTimeMillis();
+    private final String mimeType = "multipart/form-data;boundary=" + boundary;
+
+    private byte[] bytes;
+    private Bitmap bm;
+    private void updateUserAvatar() {
+        dialog = ProgressDialog.show(this, getString(R.string.dl_update_photo), getString(R.string.dl_waiting));
+        dialog.show();
+        File file = new File(ImageUtils.getAvatarpath(mContext, I.AVATAR_TYPE_USER_PATH),
+                avataname + I.AVATAR_SUFFIX_JPG);
+        Log.i("main", "fil=" + file.getAbsolutePath());
+        bm = BitmapFactory.decodeFile(file.getAbsolutePath());
+        bytes = getImageBytes(bm);
+        try {
+            String url = new ApiParams()
+                    .with(I.AVATAR_TYPE, I.AVATAR_TYPE_USER_PATH)
+                    .with(I.User.USER_NAME, SuperWeChatApplication.getInstance().getUserName())
+                    .getRequestUrl(I.REQUEST_UPLOAD_AVATAR);
+            Log.i("main", "url=" + url);
+            executeRequest(new MultipartRequest<Message>(url,Message.class,
+                    null,responseUpdateAvatarListener(),errorListener(),
+                    mimeType,bytes));
+            Log.i("main", "mimeType=" + mimeType);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    private void updateUserAvatar() {
+    private Response.Listener<Message> responseUpdateAvatarListener() {
+        return new Response.Listener<Message>() {
+            @Override
+            public void onResponse(Message message) {
+                if (message.isResult()) {
+                    UserUtils.setCurrentUserAvatar(headAvatar);
+                    dialog.dismiss();
+                } else {
+                    Toast.makeText(UserProfileActivity.this, getString(R.string.toast_updatephoto_fail),
+                            Toast.LENGTH_SHORT).show();
+                    UserUtils.setCurrentUserAvatar(headAvatar);
+                    dialog.dismiss();
+                }
 
+            }
+        };
     }
+
+    public byte[] getImageBytes(Bitmap bmp){
+        if(bmp==null)return null;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG,100,baos);
+        byte[] imageBytes = baos.toByteArray();
+        return imageBytes;
+    }
+
 
     public void startPhotoZoom(Uri uri) {
         Intent intent = new Intent("com.android.camera.action.CROP");
