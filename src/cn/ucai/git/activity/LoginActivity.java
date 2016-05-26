@@ -219,14 +219,14 @@ public class LoginActivity extends BaseActivity {
 						.with(I.User.USER_NAME, currentUsername)
                         .with(I.User.PASSWORD, currentPassword)
 						.getRequestUrl(I.REQUEST_LOGIN);
-				executeRequest(new GsonRequest<User>(path,User.class,responseListener(),errorListener()));
+				executeRequest(new GsonRequest<User>(path,User.class,responseListener(dao),errorListener()));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
 
-	private Response.Listener<User> responseListener() {
+	private Response.Listener<User> responseListener(final UserDao dao) {
 		return
 				new Response.Listener<User>() {
 			@Override
@@ -234,6 +234,7 @@ public class LoginActivity extends BaseActivity {
 				if (user.isResult()) {
 					saveUser(user);
 					loginSuccess();
+					dao.addUser(user);
 				} else {
 					pd.dismiss();
 					Utils.showToast(mContext,Utils.getResourceString(mContext,user.getMsg()),Toast.LENGTH_SHORT);

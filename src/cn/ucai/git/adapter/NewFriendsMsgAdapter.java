@@ -13,6 +13,8 @@
  */
 package cn.ucai.git.adapter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import android.app.Activity;
@@ -20,6 +22,7 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -30,11 +33,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.toolbox.NetworkImageView;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMGroupManager;
+
+import cn.ucai.git.I;
 import cn.ucai.git.R;
+import cn.ucai.git.SuperWeChatApplication;
+import cn.ucai.git.bean.Contact;
 import cn.ucai.git.db.InviteMessgeDao;
 import cn.ucai.git.domain.InviteMessage;
+import cn.ucai.git.utils.UserUtils;
 
 public class NewFriendsMsgAdapter extends ArrayAdapter<InviteMessage> {
 
@@ -53,7 +62,7 @@ public class NewFriendsMsgAdapter extends ArrayAdapter<InviteMessage> {
 		if (convertView == null) {
 			holder = new ViewHolder();
 			convertView = View.inflate(context, R.layout.row_invite_msg, null);
-			holder.avator = (ImageView) convertView.findViewById(R.id.avatar);
+			holder.avator = (NetworkImageView) convertView.findViewById(R.id.avatar);
 			holder.reason = (TextView) convertView.findViewById(R.id.message);
 			holder.name = (TextView) convertView.findViewById(R.id.name);
 			holder.status = (Button) convertView.findViewById(R.id.user_state);
@@ -123,6 +132,7 @@ public class NewFriendsMsgAdapter extends ArrayAdapter<InviteMessage> {
 			}
 
 			// 设置用户头像
+			UserUtils.setUserBeanAvatar(msg.getFrom(),holder.avator);
 		}
 
 		return convertView;
@@ -132,7 +142,7 @@ public class NewFriendsMsgAdapter extends ArrayAdapter<InviteMessage> {
 	 * 同意好友请求或者群申请
 	 * 
 	 * @param button
-	 * @param username
+	 * @param
 	 */
 	private void acceptInvitation(final Button button, final InviteMessage msg) {
 		final ProgressDialog pd = new ProgressDialog(context);
@@ -173,7 +183,7 @@ public class NewFriendsMsgAdapter extends ArrayAdapter<InviteMessage> {
 						@Override
 						public void run() {
 							pd.dismiss();
-							Toast.makeText(context, str3 + e.getMessage(), 1).show();
+							Toast.makeText(context, str3 + e.getMessage(), Toast.LENGTH_SHORT).show();
 						}
 					});
 
@@ -183,7 +193,7 @@ public class NewFriendsMsgAdapter extends ArrayAdapter<InviteMessage> {
 	}
 
 	private static class ViewHolder {
-		ImageView avator;
+		NetworkImageView avator;
 		TextView name;
 		TextView reason;
 		Button status;

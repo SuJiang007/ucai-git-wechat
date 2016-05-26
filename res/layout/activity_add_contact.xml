@@ -61,7 +61,7 @@
             android:background="@drawable/mm_listitem"
             android:duplicateParentState="true" >
 
-            <ImageView
+            <com.android.volley.toolbox.NetworkImageView
                 android:id="@+id/avatar"
                 android:layout_width="45dp"
                 android:layout_height="45dp"
@@ -96,5 +96,14 @@
                 android:textSize="14sp" />
         </RelativeLayout>
     </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="查无结果"
+        android:textSize="20sp"
+        android:textColor="#000"
+        android:gravity="center_horizontal"
+        android:id="@+id/result"
+        android:visibility="gone"/>
 
 </LinearLayout>

@@ -29,12 +29,15 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import cn.ucai.git.Constant;
+import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
+import cn.ucai.git.applib.controller.HXSDKHelper;
 import cn.ucai.git.bean.Contact;
 import cn.ucai.git.data.RequestManager;
 import cn.ucai.git.utils.UserUtils;
 
 import com.android.volley.toolbox.NetworkImageView;
+import com.easemob.chat.EMChatManager;
 import com.easemob.util.EMLog;
 
 /**
@@ -110,7 +113,9 @@ public class ContactAdapter extends BaseAdapter implements SectionIndexer{
 		    holder.avatar.setDefaultImageResId(R.drawable.new_friends_icon);
 			holder.avatar.setImageUrl("", RequestManager.getImageLoader());
 			holder.avatar.setErrorImageResId(R.drawable.new_friends_icon);
-			if(user.getMUserUnreadMsgCount() > 0){
+			int unreadMsgCountTotal = ((DemoHXSDKHelper) HXSDKHelper.getInstance()).getContactList().
+					get(Constant.NEW_FRIENDS_USERNAME).getUnreadMsgCount();
+			if(user.getMUserUnreadMsgCount() > 0 || unreadMsgCountTotal > 0){
 			    holder.unreadMsgView.setVisibility(View.VISIBLE);
 //			    holder.unreadMsgView.setText(user.getUnreadMsgCount()+"");
 			}else{
