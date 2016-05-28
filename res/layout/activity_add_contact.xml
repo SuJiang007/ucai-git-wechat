@@ -80,7 +80,6 @@
                 android:textColor="#0F0F0F"
                 android:textSize="16sp" />
 
-
             <Button
                 android:id="@+id/indicator"
                 android:layout_width="wrap_content"

@@ -282,7 +282,6 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
                     SuperWeChatApplication.getInstance().getUserName()
             ));
             updateUserAvatar();
-
         }
 
     }
@@ -295,11 +294,6 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
     private void updateUserAvatar() {
         dialog = ProgressDialog.show(this, getString(R.string.dl_update_photo), getString(R.string.dl_waiting));
         dialog.show();
-        File file = new File(ImageUtils.getAvatarpath(mContext, I.AVATAR_TYPE_USER_PATH),
-                avataname + I.AVATAR_SUFFIX_JPG);
-        Log.i("main", "fil=" + file.getAbsolutePath());
-        bm = BitmapFactory.decodeFile(file.getAbsolutePath());
-        bytes = getImageBytes(bm);
         try {
             String url = new ApiParams()
                     .with(I.AVATAR_TYPE, I.AVATAR_TYPE_USER_PATH)
@@ -313,6 +307,11 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
         } catch (Exception e) {
             e.printStackTrace();
         }
+        File file = new File(ImageUtils.getAvatarpath(mContext, I.AVATAR_TYPE_USER_PATH),
+                avataname + I.AVATAR_SUFFIX_JPG);
+        Log.i("main", "fil=" + file.getAbsolutePath());
+        bm = BitmapFactory.decodeFile(file.getAbsolutePath());
+        bytes = getImageBytes(bm);
     }
 
     private Response.Listener<Message> responseUpdateAvatarListener() {

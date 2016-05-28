@@ -183,10 +183,8 @@ public class ContactlistFragment extends Fragment {
 		blackList = EMContactManager.getInstance().getBlackListUsernames();
 		// 获取设置contactlist
 		getContactList();
-		
 		//搜索框
 		setContactItemClickListener();
-
 		// 设置adapter
 		setContactListTouchListener();
 		setAddContactListener();

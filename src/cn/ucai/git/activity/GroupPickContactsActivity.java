@@ -29,17 +29,21 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import cn.ucai.git.I;
 import cn.ucai.git.SuperWeChatApplication;
-import cn.ucai.git.applib.controller.HXSDKHelper;
+
+import com.android.volley.Response;
 import com.easemob.chat.EMGroup;
 import com.easemob.chat.EMGroupManager;
 import cn.ucai.git.Constant;
-import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
 import cn.ucai.git.adapter.ContactAdapter;
 import cn.ucai.git.bean.Contact;
-import cn.ucai.git.domain.EMUser;
+import cn.ucai.git.bean.Group;
+import cn.ucai.git.data.ApiParams;
+import cn.ucai.git.data.GsonRequest;
 import cn.ucai.git.utils.Utils;
 import cn.ucai.git.widget.Sidebar;
 
@@ -108,6 +112,20 @@ public class GroupPickContactsActivity extends BaseActivity {
 	public void save(View v) {
 		setResult(RESULT_OK, new Intent().putExtra("newmembers", getToBeAddMembers()));
 		finish();
+	}
+
+
+	private Response.Listener<Group> responseAddGroupMemberListener() {
+		return new Response.Listener<Group>() {
+			@Override
+			public void onResponse(Group group) {
+				if (group != null) {
+					Utils.showToast(GroupPickContactsActivity.this, R.string.msg_305, Toast.LENGTH_SHORT);
+				} else {
+					Utils.showToast(GroupPickContactsActivity.this, R.string.msg_304, Toast.LENGTH_SHORT);
+				}
+			}
+		};
 	}
 
 	/**

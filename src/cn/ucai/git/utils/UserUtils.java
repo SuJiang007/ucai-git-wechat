@@ -2,6 +2,7 @@ package cn.ucai.git.utils;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -12,6 +13,7 @@ import cn.ucai.git.applib.controller.HXSDKHelper;
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
 import cn.ucai.git.bean.Contact;
+import cn.ucai.git.bean.Group;
 import cn.ucai.git.bean.User;
 import cn.ucai.git.data.RequestManager;
 import cn.ucai.git.domain.EMUser;
@@ -19,6 +21,8 @@ import cn.ucai.git.domain.EMUser;
 import com.android.volley.toolbox.NetworkImageView;
 import com.easemob.util.HanziToPinyin;
 import com.squareup.picasso.Picasso;
+
+import java.util.ArrayList;
 
 public class UserUtils {
     /**
@@ -72,7 +76,7 @@ public class UserUtils {
 		imageView.setErrorImageResId(R.drawable.default_image);
 	}
 
-	private static String getAvatarUrl(String username) {
+	public static String getAvatarUrl(String username) {
 		if (username ==null || username.isEmpty()) return null;
 		return I.REQUEST_DOWNLOAD_AVATAR_USER + username;
 	}
@@ -169,5 +173,43 @@ public class UserUtils {
 			}
 		}
 	}
-    
+
+	public static void setGroupBeanAvatar(String mGroupHxid, NetworkImageView imageView) {
+		if (mGroupHxid != null && !mGroupHxid.isEmpty()) {
+			setGroupAvatar(getGroupAvatarPath(mGroupHxid), imageView);
+		}
+	}
+
+	private static String getGroupAvatarPath(String hxid) {
+		if (hxid == null || hxid.isEmpty()) return null;
+		return I.REQUEST_DOWNLOAD_AVATAR_GROUP + hxid;
+	}
+
+	private static void setGroupAvatar(String url,NetworkImageView imageView) {
+		if (url==null || url.isEmpty())return;
+		imageView.setDefaultImageResId(R.drawable.group_icon);
+		imageView.setImageUrl(url,RequestManager.getImageLoader());
+		imageView.setErrorImageResId(R.drawable.group_icon);
+	}
+
+	public static Group getGroupBeanFromHXID(String hxid) {
+		if (hxid != null && !hxid.isEmpty()) {
+			ArrayList<Group> list = SuperWeChatApplication.getInstance().getGroupArrayList();
+			for (Group group : list) {
+				if (group.getMGroupHxid().equals(hxid)) {
+					return group;
+				}
+			}
+		}
+		return null;
+	}
+	public static String hanziTopinyin(String Hanzi) {
+		String pinyin = "";
+		for (int i=0;i<Hanzi.length();i++) {
+			String s = Hanzi.substring(i, i + 1);
+			pinyin = pinyin + HanziToPinyin.getInstance()
+					.get(s).get(0).target.toLowerCase();
+		}
+		return pinyin;
+	}
 }

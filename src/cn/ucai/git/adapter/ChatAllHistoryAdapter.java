@@ -45,6 +45,7 @@ import com.easemob.chat.EMConversation.EMConversationType;
 import cn.ucai.git.Constant;
 import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
+import cn.ucai.git.bean.Group;
 import cn.ucai.git.domain.RobotUser;
 import cn.ucai.git.utils.DateUtils;
 import cn.ucai.git.utils.SmileUtils;
@@ -101,9 +102,10 @@ public class ChatAllHistoryAdapter extends ArrayAdapter<EMConversation> {
 		String username = conversation.getUserName();
 		if (conversation.getType() == EMConversationType.GroupChat) {
 			// 群聊消息，显示群聊头像
-			holder.avatar.setImageResource(R.drawable.group_icon);
-			EMGroup group = EMGroupManager.getInstance().getGroup(username);
-			holder.name.setText(group != null ? group.getGroupName() : username);
+			UserUtils.setGroupBeanAvatar(username,holder.avatar);
+			Group group = UserUtils.getGroupBeanFromHXID(username);
+//			EMGroup group = EMGroupManager.getInstance().getGroup(username);
+			holder.name.setText(group != null ? group.getMGroupName() : username);
 		} else if(conversation.getType() == EMConversationType.ChatRoom){
 		    holder.avatar.setImageResource(R.drawable.group_icon);
             EMChatRoom room = EMChatManager.getInstance().getChatRoom(username);

@@ -24,19 +24,18 @@ import android.widget.Toast;
 
 import com.easemob.EMError;
 import com.easemob.chat.EMChatManager;
+import com.easemob.exceptions.EaseMobException;
+
+import java.io.File;
 
 import cn.ucai.git.I;
-import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.R;
+import cn.ucai.git.SuperWeChatApplication;
 import cn.ucai.git.bean.Message;
 import cn.ucai.git.data.OkHttpUtils;
 import cn.ucai.git.listener.OnSetAvatarListener;
 import cn.ucai.git.utils.ImageUtils;
 import cn.ucai.git.utils.Utils;
-
-import com.easemob.exceptions.EaseMobException;
-
-import java.io.File;
 
 /**
  * 注册页
@@ -158,6 +157,9 @@ public class RegisterActivity extends BaseActivity {
 	}
 
 	private void registerAPPServer() {
+		//先注册环信服务器
+		//注册本地的服务器并上传头像
+		//如果环信服务器注册失败，删除服务器上面的账号和头像
 		File file = new File(ImageUtils.getAvatarpath(RegisterActivity.this, I.AVATAR_TYPE_USER_PATH), mAvatar + I.AVATAR_SUFFIX_JPG);
 		final OkHttpUtils<Message> utils = new OkHttpUtils<>();
 		utils.url(SuperWeChatApplication.ROOT_SERVER)
