@@ -17,8 +17,10 @@ package cn.ucai.git.activity;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,32 +64,23 @@ public class PublicGroupsActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(cn.ucai.git.R.layout.activity_public_groups);
 
-		pb = (ProgressBar) findViewById(cn.ucai.git.R.id.progressBar);
-		listView = (ListView) findViewById(cn.ucai.git.R.id.list);
-		groupsList = new ArrayList<EMGroupInfo>();
-		searchBtn = (Button) findViewById(cn.ucai.git.R.id.btn_search);
-		
-		View footView = getLayoutInflater().inflate(cn.ucai.git.R.layout.listview_footer_view, null);
-        footLoadingLayout = (LinearLayout) footView.findViewById(cn.ucai.git.R.id.loading_layout);
-        footLoadingPB = (ProgressBar)footView.findViewById(cn.ucai.git.R.id.loading_bar);
-        footLoadingText = (TextView) footView.findViewById(cn.ucai.git.R.id.loading_text);
-        listView.addFooterView(footView, null, false);
-        footLoadingLayout.setVisibility(View.GONE);
-        
+        groupsList = new ArrayList<EMGroupInfo>();
+        initView();
         //获取及显示数据
         loadAndShowData();
-        
+        setListener();
         //设置item点击事件
-        listView.setOnItemClickListener(new OnItemClickListener() {
+	}
 
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                startActivity(new Intent(PublicGroupsActivity.this, GroupSimpleDetailActivity.class).
-                        putExtra("groupinfo", adapter.getItem(position)));
-            }
-        });
+    private void setListener() {
+        setItemClickListener();
+        setScrollListener();
+        registerPublicGroupReceiver();
+    }
+
+    private void setScrollListener() {
         listView.setOnScrollListener(new OnScrollListener() {
-            
+
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if(scrollState == OnScrollListener.SCROLL_STATE_IDLE){
@@ -99,16 +92,38 @@ public class PublicGroupsActivity extends BaseActivity {
                     }
                 }
             }
-            
+
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                
+
             }
         });
-        
-	}
-	
-	/**
+    }
+
+    private void setItemClickListener() {
+        listView.setOnItemClickListener(new OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                startActivity(new Intent(PublicGroupsActivity.this, GroupSimpleDetailActivity.class).
+                        putExtra("groupinfo", adapter.getItem(position)));
+            }
+        });
+    }
+
+    private void initView() {
+        pb = (ProgressBar) findViewById(cn.ucai.git.R.id.progressBar);
+        listView = (ListView) findViewById(cn.ucai.git.R.id.list);
+        searchBtn = (Button) findViewById(cn.ucai.git.R.id.btn_search);
+        View footView = getLayoutInflater().inflate(cn.ucai.git.R.layout.listview_footer_view, null);
+        footLoadingLayout = (LinearLayout) footView.findViewById(cn.ucai.git.R.id.loading_layout);
+        footLoadingPB = (ProgressBar)footView.findViewById(cn.ucai.git.R.id.loading_bar);
+        footLoadingText = (TextView) footView.findViewById(cn.ucai.git.R.id.loading_text);
+        listView.addFooterView(footView, null, false);
+        footLoadingLayout.setVisibility(View.GONE);
+    }
+
+    /**
 	 * 搜索
 	 * @param view
 	 */
@@ -161,7 +176,7 @@ public class PublicGroupsActivity extends BaseActivity {
                             isLoading = false;
                             pb.setVisibility(View.INVISIBLE);
                             footLoadingLayout.setVisibility(View.GONE);
-                            Toast.makeText(PublicGroupsActivity.this, "加载数据失败，请检查网络或稍后重试", 0).show();
+                            Toast.makeText(PublicGroupsActivity.this, "加载数据失败，请检查网络或稍后重试", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -196,4 +211,26 @@ public class PublicGroupsActivity extends BaseActivity {
 	public void back(View view){
 		finish();
 	}
+
+    class publicGroupChangeReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            loadAndShowData();
+        }
+    }
+    publicGroupChangeReceiver mReceiver;
+
+    private void registerPublicGroupReceiver() {
+        mReceiver = new publicGroupChangeReceiver();
+        IntentFilter filter = new IntentFilter("update_public_group");
+        registerReceiver(mReceiver, filter);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver);
+        }
+    }
 }
