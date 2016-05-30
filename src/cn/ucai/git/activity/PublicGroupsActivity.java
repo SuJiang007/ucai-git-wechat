@@ -386,7 +386,6 @@ public class PublicGroupsActivity extends BaseActivity {
             }
         }
 
-
         @Override
         public void notifyDataSetChanged() {
             super.notifyDataSetChanged();
