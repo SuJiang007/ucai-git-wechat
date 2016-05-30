@@ -1,10 +1,10 @@
 /**
  * Copyright (C) 2013-2014 EaseMob Technologies. All rights reserved.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,52 +34,91 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.easemob.chat.EMCursorResult;
-import com.easemob.chat.EMGroupInfo;
-import com.easemob.chat.EMGroupManager;
-import com.easemob.exceptions.EaseMobException;
+import com.android.volley.toolbox.NetworkImageView;
+import com.easemob.util.EMLog;
+
+import cn.ucai.git.R;
+import cn.ucai.git.SuperWeChatApplication;
+import cn.ucai.git.bean.Group;
+import cn.ucai.git.task.DownloadPublicGroupTask;
+import cn.ucai.git.utils.UserUtils;
 
 public class PublicGroupsActivity extends BaseActivity {
-	private ProgressBar pb;
-	private ListView listView;
-	private GroupsAdapter adapter;
-	
-	private List<EMGroupInfo> groupsList;
-	private boolean isLoading;
-	private boolean isFirstLoading = true;
-	private boolean hasMoreData = true;
-	private String cursor;
-	private final int pagesize = 20;
+    private ProgressBar pb;
+    private ListView listView;
+    private GroupsAdapter adapter;
+
+    private ArrayList<Group> groupsList;
+    private boolean isLoading;
+    private boolean isFirstLoading = true;
+    private boolean hasMoreData = true;
+    private String cursor;
+    private final int pagesize = 20;
+    private int pageId = 0;
     private LinearLayout footLoadingLayout;
     private ProgressBar footLoadingPB;
     private TextView footLoadingText;
     private Button searchBtn;
-    
+    private final static String TAG = PublicGroupsActivity.class.getName();
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(cn.ucai.git.R.layout.activity_public_groups);
 
-        groupsList = new ArrayList<EMGroupInfo>();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(cn.ucai.git.R.layout.activity_public_groups);
+
+        groupsList = new ArrayList<Group>();
         initView();
         //获取及显示数据
         loadAndShowData();
         setListener();
         //设置item点击事件
-	}
+    }
 
     private void setListener() {
         setItemClickListener();
         setScrollListener();
         registerPublicGroupReceiver();
+        setQueryTextChangedListener();
+    }
+
+    private void setQueryTextChangedListener() {
+        final EditText query = (EditText) findViewById(cn.ucai.git.R.id.query);
+        final ImageButton clearSearch = (ImageButton) findViewById(cn.ucai.git.R.id.search_clear);
+        query.addTextChangedListener(new TextWatcher() {
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.getFilter().filter(s);
+                if (s.length() > 0) {
+                    clearSearch.setVisibility(View.VISIBLE);
+                } else {
+                    clearSearch.setVisibility(View.INVISIBLE);
+                }
+            }
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        clearSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                query.getText().clear();
+            }
+        });
     }
 
     private void setScrollListener() {
@@ -83,10 +126,13 @@ public class PublicGroupsActivity extends BaseActivity {
 
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
-                if(scrollState == OnScrollListener.SCROLL_STATE_IDLE){
-                    if(listView.getCount() != 0){
+                if (scrollState == OnScrollListener.SCROLL_STATE_IDLE) {
+                    if (listView.getCount() != 0) {
                         int lasPos = view.getLastVisiblePosition();
-                        if(hasMoreData && !isLoading && lasPos == listView.getCount()-1){
+                        if (hasMoreData && !isLoading && lasPos == listView.getCount() - 1) {
+                            pageId++;
+                            new DownloadPublicGroupTask(pageId, pagesize, SuperWeChatApplication.
+                                    getInstance().getUserName(), PublicGroupsActivity.this).execute();
                             loadAndShowData();
                         }
                     }
@@ -117,48 +163,48 @@ public class PublicGroupsActivity extends BaseActivity {
         searchBtn = (Button) findViewById(cn.ucai.git.R.id.btn_search);
         View footView = getLayoutInflater().inflate(cn.ucai.git.R.layout.listview_footer_view, null);
         footLoadingLayout = (LinearLayout) footView.findViewById(cn.ucai.git.R.id.loading_layout);
-        footLoadingPB = (ProgressBar)footView.findViewById(cn.ucai.git.R.id.loading_bar);
+        footLoadingPB = (ProgressBar) footView.findViewById(cn.ucai.git.R.id.loading_bar);
         footLoadingText = (TextView) footView.findViewById(cn.ucai.git.R.id.loading_text);
         listView.addFooterView(footView, null, false);
         footLoadingLayout.setVisibility(View.GONE);
     }
 
     /**
-	 * 搜索
-	 * @param view
-	 */
-	public void search(View view){
-	    startActivity(new Intent(this, PublicGroupsSeachActivity.class));
-	}
-	
-	private void loadAndShowData(){
-	    new Thread(new Runnable() {
+     * 搜索
+     * @param view
+     */
+    public void search(View view) {
+        startActivity(new Intent(this, PublicGroupsSeachActivity.class));
+    }
 
+    private void loadAndShowData() {
+        new Thread(new Runnable() {
             public void run() {
                 try {
                     isLoading = true;
-                    final EMCursorResult<EMGroupInfo> result = EMGroupManager.getInstance().getPublicGroupsFromServer(pagesize, cursor);
-                    //获取group list
-                    final List<EMGroupInfo> returnGroups = result.getData();
+                    final ArrayList<Group> publicArrayList = SuperWeChatApplication.getInstance().getPublicArrayList();
+                    for (Group group : publicArrayList) {
+                        if (!groupsList.contains(group)) {
+                            groupsList.add(group);
+                        }
+                    }
                     runOnUiThread(new Runnable() {
-
+                        @Override
                         public void run() {
+                            //获取group list
                             searchBtn.setVisibility(View.VISIBLE);
-                            groupsList.addAll(returnGroups);
-                            if(returnGroups.size() != 0){
-                                //获取cursor
-                                cursor = result.getCursor();
-                                if(returnGroups.size() == pagesize)
+                            if (publicArrayList.size() != 0) {
+                                if (groupsList.size() < publicArrayList.size())
                                     footLoadingLayout.setVisibility(View.VISIBLE);
                             }
-                            if(isFirstLoading){
+                            if (isFirstLoading) {
                                 pb.setVisibility(View.INVISIBLE);
                                 isFirstLoading = false;
                                 //设置adapter
                                 adapter = new GroupsAdapter(PublicGroupsActivity.this, 1, groupsList);
                                 listView.setAdapter(adapter);
-                            }else{
-                                if(returnGroups.size() < pagesize){
+                            } else {
+                                if (groupsList.size() < (pageId + 1) * pagesize) {
                                     hasMoreData = false;
                                     footLoadingLayout.setVisibility(View.VISIBLE);
                                     footLoadingPB.setVisibility(View.GONE);
@@ -169,7 +215,7 @@ public class PublicGroupsActivity extends BaseActivity {
                             isLoading = false;
                         }
                     });
-                } catch (EaseMobException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     runOnUiThread(new Runnable() {
                         public void run() {
@@ -182,35 +228,178 @@ public class PublicGroupsActivity extends BaseActivity {
                 }
             }
         }).start();
-	}
-	/**
-	 * adapter
-	 *
-	 */
-	private class GroupsAdapter extends ArrayAdapter<EMGroupInfo> {
+    }
 
-		private LayoutInflater inflater;
+    /**
+     * adapter
+     *
+     */
+    private class GroupsAdapter extends BaseAdapter implements SectionIndexer {
 
-		public GroupsAdapter(Context context, int res, List<EMGroupInfo> groups) {
-			super(context, res, groups);
-			this.inflater = LayoutInflater.from(context);
-		}
+        private LayoutInflater inflater;
+        ArrayList<Group> mGroupList;
 
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			if (convertView == null) {
-				convertView = inflater.inflate(cn.ucai.git.R.layout.row_group, null);
-			}
+        Context mContext;
+        private SparseIntArray positionOfSection;
+        private SparseIntArray sectionOfPosition;
+        List<String> list;
+        private MyFilter myFilter;
+        ArrayList<Group> copyGroupList;
 
-			((TextView) convertView.findViewById(cn.ucai.git.R.id.name)).setText(getItem(position).getGroupName());
+        private boolean notiyfyByFilter;
+        public GroupsAdapter(Context context, int res, ArrayList<Group> groups) {
+            mGroupList = groups;
+            copyGroupList = new ArrayList<Group>();
+            copyGroupList.addAll(mGroupList);
+            this.inflater = LayoutInflater.from(context);
+        }
 
-			return convertView;
-		}
-	}
-	
-	public void back(View view){
-		finish();
-	}
+        @Override
+        public int getCount() {
+            return mGroupList==null?0:mGroupList.size();
+        }
+
+        @Override
+        public Group getItem(int position) {
+            return mGroupList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = inflater.inflate(cn.ucai.git.R.layout.row_group, null);
+            }
+
+            Group group = getItem(position);
+            ((TextView) convertView.findViewById(cn.ucai.git.R.id.name)).setText(group.getMGroupName());
+            UserUtils.setGroupBeanAvatar(group.getMGroupHxid(),(NetworkImageView)convertView.findViewById(R.id.avatar));
+            return convertView;
+        }
+        @Override
+        public Object[] getSections() {
+            positionOfSection = new SparseIntArray();
+            sectionOfPosition = new SparseIntArray();
+            int count = getCount();
+            list = new ArrayList<String>();
+            list.add(mContext.getString(R.string.search_header));
+            positionOfSection.put(0, 0);
+            sectionOfPosition.put(0, 0);
+            for (int i = 1; i < count; i++) {
+
+                String letter = getItem(i).getHeader();
+                Log.e(TAG, "contactadapter getsection getHeader:" + letter + " name:" + getItem(i).getMGroupName());
+                int section = list.size() - 1;
+                if (list.get(section) != null && !list.get(section).equals(letter)) {
+                    list.add(letter);
+                    section++;
+                    positionOfSection.put(section, i);
+                }
+                sectionOfPosition.put(i, section);
+            }
+            return list.toArray(new String[list.size()]);
+        }
+
+        @Override
+        public int getPositionForSection(int sectionIndex) {
+            return positionOfSection.get(sectionIndex);
+        }
+
+        @Override
+        public int getSectionForPosition(int position) {
+            return sectionOfPosition.get(position);
+        }
+        public Filter getFilter() {
+            if(myFilter==null){
+                myFilter = new MyFilter(mGroupList);
+            }
+            return myFilter;
+        }
+
+        private class  MyFilter extends Filter{
+            List<Group> mOriginalList = null;
+
+            public MyFilter(List<Group> myList) {
+                this.mOriginalList = myList;
+            }
+
+            @Override
+            protected synchronized FilterResults performFiltering(CharSequence prefix) {
+                FilterResults results = new FilterResults();
+                if(mOriginalList==null){
+                    mOriginalList = new ArrayList<Group>();
+                }
+                Log.e(TAG, "contacts original size: " + mOriginalList.size());
+                Log.e(TAG, "contacts copy size: " + copyGroupList.size());
+
+                if(prefix==null || prefix.length()==0){
+                    results.values = copyGroupList;
+                    results.count = copyGroupList.size();
+                }else{
+                    String prefixString = prefix.toString();
+                    final int count = mOriginalList.size();
+                    final ArrayList<Group> newValues = new ArrayList<Group>();
+                    for(int i=0;i<count;i++){
+                        final Group group = mOriginalList.get(i);
+                        String username = UserUtils.hanziTopinyin(group.getMGroupName());
+
+                        if(username.contains(prefixString)){
+                            newValues.add(group);
+                        }
+                        else{
+                            final String[] words = username.split(" ");
+                            final int wordCount = words.length;
+
+                            // Start at index 0, in case valueText starts with space(s)
+                            for (int k = 0; k < wordCount; k++) {
+                                if (words[k].contains(prefixString)) {
+                                    newValues.add(group);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    results.values=newValues;
+                    results.count=newValues.size();
+                }
+                EMLog.d(TAG, "contacts filter results size: " + results.count);
+                return results;
+            }
+
+            @Override
+            protected synchronized void publishResults(CharSequence constraint,
+                                                       FilterResults results) {
+                mGroupList.clear();
+                mGroupList.addAll((List<Group>)results.values);
+                EMLog.d(TAG, "publish contacts filter results size: " + results.count);
+                if (results.count > 0) {
+                    notiyfyByFilter = true;
+                    notifyDataSetChanged();
+                    notiyfyByFilter = false;
+                } else {
+                    notifyDataSetInvalidated();
+                }
+            }
+        }
+
+
+        @Override
+        public void notifyDataSetChanged() {
+            super.notifyDataSetChanged();
+            if(!notiyfyByFilter){
+                copyGroupList.clear();
+                copyGroupList.addAll(mGroupList);
+            }
+        }
+    }
+
+    public void back(View view) {
+        finish();
+    }
 
     class publicGroupChangeReceiver extends BroadcastReceiver {
         @Override
@@ -218,6 +407,7 @@ public class PublicGroupsActivity extends BaseActivity {
             loadAndShowData();
         }
     }
+
     publicGroupChangeReceiver mReceiver;
 
     private void registerPublicGroupReceiver() {

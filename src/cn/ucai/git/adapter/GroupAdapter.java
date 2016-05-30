@@ -97,7 +97,7 @@ public class GroupAdapter extends BaseAdapter implements SectionIndexer {
 			final ImageButton clearSearch = (ImageButton) convertView.findViewById(cn.ucai.git.R.id.search_clear);
 			query.addTextChangedListener(new TextWatcher() {
 				public void onTextChanged(CharSequence s, int start, int before, int count) {
-//					getFilter().filter(s);
+					getFilter().filter(s);
 					if (s.length() > 0) {
 						clearSearch.setVisibility(View.VISIBLE);
 					} else {
@@ -233,7 +233,7 @@ public class GroupAdapter extends BaseAdapter implements SectionIndexer {
 				final ArrayList<Group> newValues = new ArrayList<Group>();
 				for(int i=0;i<count;i++){
 					final Group group = mOriginalList.get(i);
-					String username = group.getMGroupName();
+					String username = UserUtils.hanziTopinyin(group.getMGroupName());
 
 					if(username.contains(prefixString)){
 						newValues.add(group);
