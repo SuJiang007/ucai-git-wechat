@@ -1,46 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_register"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#eff2f6"
-    android:orientation="vertical"
-    android:id="@+id/layout_register">
+    android:orientation="vertical">
 
-    <RelativeLayout
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dip"
-        android:layout_weight="2" >
+        android:layout_height="30dp"
+        android:background="#fff"
+        android:orientation="horizontal">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:src="@drawable/mobile"
-            android:id="@+id/ivmob"/>
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/back_press" />
+
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="超级微信"
-            android:layout_toRightOf="@+id/ivmob"
-            android:gravity="center_vertical"
-            android:textColor="#000"
-            android:textSize="20sp"/>
-    </RelativeLayout>
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:paddingRight="40dp"
+            android:text="账户注册"
+            android:textColor=""
+            android:textSize="20sp" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dip"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginTop="10dp"
         android:layout_weight="5"
-        android:orientation="vertical" >
+        android:orientation="vertical">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:background="#fff" >
+            android:background="#fff">
 
             <ImageView
                 android:id="@+id/iv_username"
@@ -63,12 +64,15 @@
                 android:singleLine="true"
                 android:textSize="18sp" />
         </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:background="#fff" >
+            android:background="#fff">
 
             <ImageView
                 android:id="@+id/iv_nick"
@@ -92,13 +96,14 @@
                 android:textSize="18sp" />
         </RelativeLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:layout_marginTop="10dp"
-            android:background="#fff" >
+            android:background="#fff">
 
             <ImageView
                 android:id="@+id/iv_password"
@@ -123,13 +128,14 @@
                 android:textSize="18sp" />
         </RelativeLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:layout_marginTop="10dp"
-            android:background="#fff" >
+            android:background="#fff">
 
             <ImageView
                 android:id="@+id/iv_password2"
@@ -153,13 +159,16 @@
                 android:singleLine="true"
                 android:textSize="18sp" />
         </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
         <RelativeLayout
+            android:id="@+id/layout_Photo"
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:background="#fff"
-            android:id="@+id/layout_Photo">
+            android:background="#fff">
 
             <ImageView
                 android:id="@+id/iv_avatar"
@@ -177,49 +186,27 @@
                 android:layout_centerVertical="true"
                 android:layout_toLeftOf="@id/iv_avatar"
                 android:background="@null"
-                android:hint="photo"
+                android:hint="头像"
                 android:paddingLeft="10dip"
                 android:singleLine="true"
                 android:textSize="18sp" />
         </RelativeLayout>
 
-        <LinearLayout
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+        <Button
+            android:id="@+id/regist"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="20dp"
-            android:orientation="horizontal" >
+            android:layout_marginTop="30dp"
+            android:layout_marginLeft="20dip"
+            android:layout_marginRight="20dip"
+            android:text="@string/register"
+            android:background="#ff4400"
+            android:textColor="#ccc"
+            android:textSize="18sp" />
 
-            <Button
-                android:id="@+id/regist"
-                android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/button_login_bg"
-                android:paddingBottom="7dp"
-                android:paddingTop="7dp"
-                android:text="@string/register"
-                android:textColor="@android:color/white"
-                android:textSize="20sp" />
-            <Button
-                android:id="@+id/login"
-                android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/button_login_bg"
-                android:paddingBottom="7dp"
-                android:paddingTop="7dp"
-                android:text="@string/login"
-                android:textColor="@android:color/white"
-                android:textSize="20sp" />
-        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>
