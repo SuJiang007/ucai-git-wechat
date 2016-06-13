@@ -130,9 +130,6 @@ public class GroupsActivity extends BaseActivity {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				if (position == 0) {
-
-				}
 				if (position == 1) {
 					// 新建群聊
 					startActivityForResult(new Intent(GroupsActivity.this, NewGroupActivity.class), 0);

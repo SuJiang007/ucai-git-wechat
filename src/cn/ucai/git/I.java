@@ -210,6 +210,10 @@ public interface I {
 	String REQUEST_FIND_GROUP_BY_ID					= 		"find_group_by_group_id";
 	/** 客户端发送的根据群组环信id查找群组请求 */
 	String REQUEST_FIND_GROUP_BY_HXID 				= 		"find_group_by_group_hxid";
+	/** 客户端发送的根据群组环信id查找公开群组请求 */
+	String REQUEST_FIND_PUBLIC_GROUP_BY_HXID 		= 		"find_public_group_by_group_hxid";
+	/** 客户端发送的添加多个群成员请求 */
+	String REQUEST_ADD_GROUP_MEMBER_BY_USERNAME		= 		"add_group_member_by_username";
     /** 下载用户头像的请求 */
 	String REQUEST_DOWNLOAD_AVATAR_USER = SuperWeChatApplication.ROOT_SERVER + "?" + KEY_REQUEST + "="
 			+ REQUEST_DOWNLOAD_AVATAR + "&" + AVATAR_TYPE + "=";

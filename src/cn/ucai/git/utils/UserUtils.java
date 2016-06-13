@@ -14,6 +14,7 @@ import cn.ucai.git.DemoHXSDKHelper;
 import cn.ucai.git.R;
 import cn.ucai.git.bean.Contact;
 import cn.ucai.git.bean.Group;
+import cn.ucai.git.bean.Member;
 import cn.ucai.git.bean.User;
 import cn.ucai.git.data.RequestManager;
 import cn.ucai.git.domain.EMUser;
@@ -69,7 +70,7 @@ public class UserUtils {
 		}
 	}
 
-	private static void setUserAvatar(String url,NetworkImageView imageView) {
+	public static void setUserAvatar(String url,NetworkImageView imageView) {
 		if (url == null || url.isEmpty()) return;
 		imageView.setDefaultImageResId(R.drawable.default_image);
 		imageView.setImageUrl(url, RequestManager.getImageLoader());
@@ -140,8 +141,36 @@ public class UserUtils {
 			textView.setText(user.getMUserNick());
 		}
 	}
-    
-    /**
+
+	public static void setUserBeanNick(User user, TextView textView) {
+		if (user != null) {
+			if (user.getMUserNick() != null) {
+				textView.setText(user.getMUserNick());
+			} else if (user.getMUserName() != null) {
+				textView.setText(user.getMUserName());
+			}
+		}
+	}
+
+	public static void setGroupMemberNick(String hxid, String username, TextView textView) {
+		Member groupMember = getGroupMember(hxid, username);
+		if (groupMember != null) {
+			setUserBeanNick(groupMember,textView);
+		}
+	}
+	private static Member getGroupMember(String hxid, String username) {
+		ArrayList<Member> members = SuperWeChatApplication.getInstance().getGroupmember().get(hxid);
+		if (members != null) {
+			for (Member member : members) {
+				if (member.getMMemberUserName().equals(username)) {
+					return member;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
      * 保存或更新某个用户
      * @param newUser
      */

@@ -22,8 +22,10 @@ import java.util.List;
 import java.util.Map;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -70,6 +72,8 @@ import com.easemob.EMError;
 import com.easemob.EMEventListener;
 import com.easemob.EMNotifierEvent;
 import com.easemob.EMValueCallBack;
+
+import cn.ucai.git.R;
 import cn.ucai.git.applib.controller.HXSDKHelper;
 import cn.ucai.git.applib.model.GroupRemoveListener;
 import com.easemob.chat.EMChatManager;
@@ -93,7 +97,10 @@ import cn.ucai.git.adapter.ExpressionAdapter;
 import cn.ucai.git.adapter.ExpressionPagerAdapter;
 import cn.ucai.git.adapter.MessageAdapter;
 import cn.ucai.git.adapter.VoicePlayClickListener;
+import cn.ucai.git.bean.Group;
+import cn.ucai.git.bean.Member;
 import cn.ucai.git.domain.RobotUser;
+import cn.ucai.git.task.DownloadGroupMemberTask;
 import cn.ucai.git.utils.CommonUtils;
 import cn.ucai.git.utils.ImageUtils;
 import cn.ucai.git.utils.SmileUtils;
@@ -190,6 +197,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	private boolean haveMoreData = true;
 	private Button btnMore;
 	public String playMsgId;
+	ArrayList<Member> members;
 
 	private SwipeRefreshLayout swipeRefreshLayout;
 
@@ -203,12 +211,14 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	public EMGroup group;
 	public EMChatRoom room;
 	public boolean isRobot;
+    Group mGroup;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(cn.ucai.git.R.layout.activity_chat);
+		setContentView(R.layout.activity_chat);
 		activityInstance = this;
+		registerChatListChangedReceiver();
 		initView();
 		setUpView();
 	}
@@ -217,46 +227,46 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 * initView
 	 */
 	protected void initView() {
-		recordingContainer = findViewById(cn.ucai.git.R.id.recording_container);
-		micImage = (ImageView) findViewById(cn.ucai.git.R.id.mic_image);
-		recordingHint = (TextView) findViewById(cn.ucai.git.R.id.recording_hint);
-		listView = (ListView) findViewById(cn.ucai.git.R.id.list);
-		mEditTextContent = (PasteEditText) findViewById(cn.ucai.git.R.id.et_sendmessage);
-		buttonSetModeKeyboard = findViewById(cn.ucai.git.R.id.btn_set_mode_keyboard);
-		edittext_layout = (RelativeLayout) findViewById(cn.ucai.git.R.id.edittext_layout);
-		buttonSetModeVoice = findViewById(cn.ucai.git.R.id.btn_set_mode_voice);
-		buttonSend = findViewById(cn.ucai.git.R.id.btn_send);
-		buttonPressToSpeak = findViewById(cn.ucai.git.R.id.btn_press_to_speak);
-		expressionViewpager = (ViewPager) findViewById(cn.ucai.git.R.id.vPager);
-		emojiIconContainer = (LinearLayout) findViewById(cn.ucai.git.R.id.ll_face_container);
-		btnContainer = (LinearLayout) findViewById(cn.ucai.git.R.id.ll_btn_container);
-		locationImgview = (ImageView) findViewById(cn.ucai.git.R.id.btn_location);
-		iv_emoticons_normal = (ImageView) findViewById(cn.ucai.git.R.id.iv_emoticons_normal);
-		iv_emoticons_checked = (ImageView) findViewById(cn.ucai.git.R.id.iv_emoticons_checked);
-		loadmorePB = (ProgressBar) findViewById(cn.ucai.git.R.id.pb_load_more);
-		btnMore = (Button) findViewById(cn.ucai.git.R.id.btn_more);
+		recordingContainer = findViewById(R.id.recording_container);
+		micImage = (ImageView) findViewById(R.id.mic_image);
+		recordingHint = (TextView) findViewById(R.id.recording_hint);
+		listView = (ListView) findViewById(R.id.list);
+		mEditTextContent = (PasteEditText) findViewById(R.id.et_sendmessage);
+		buttonSetModeKeyboard = findViewById(R.id.btn_set_mode_keyboard);
+		edittext_layout = (RelativeLayout) findViewById(R.id.edittext_layout);
+		buttonSetModeVoice = findViewById(R.id.btn_set_mode_voice);
+		buttonSend = findViewById(R.id.btn_send);
+		buttonPressToSpeak = findViewById(R.id.btn_press_to_speak);
+		expressionViewpager = (ViewPager) findViewById(R.id.vPager);
+		emojiIconContainer = (LinearLayout) findViewById(R.id.ll_face_container);
+		btnContainer = (LinearLayout) findViewById(R.id.ll_btn_container);
+		locationImgview = (ImageView) findViewById(R.id.btn_location);
+		iv_emoticons_normal = (ImageView) findViewById(R.id.iv_emoticons_normal);
+		iv_emoticons_checked = (ImageView) findViewById(R.id.iv_emoticons_checked);
+		loadmorePB = (ProgressBar) findViewById(R.id.pb_load_more);
+		btnMore = (Button) findViewById(R.id.btn_more);
 		iv_emoticons_normal.setVisibility(View.VISIBLE);
 		iv_emoticons_checked.setVisibility(View.INVISIBLE);
-		more = findViewById(cn.ucai.git.R.id.more);
-		edittext_layout.setBackgroundResource(cn.ucai.git.R.drawable.input_bar_bg_normal);
-		voiceCallBtn = (ImageView) findViewById(cn.ucai.git.R.id.btn_voice_call);
-		videoCallBtn = (ImageView) findViewById(cn.ucai.git.R.id.btn_video_call);
+		more = findViewById(R.id.more);
+		edittext_layout.setBackgroundResource(R.drawable.input_bar_bg_normal);
+		voiceCallBtn = (ImageView) findViewById(R.id.btn_voice_call);
+		videoCallBtn = (ImageView) findViewById(R.id.btn_video_call);
 
 		// 动画资源文件,用于录制语音时
-		micImages = new Drawable[] { getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_01),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_02),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_03),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_04),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_05),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_06),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_07),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_08),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_09),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_10),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_11),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_12),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_13),
-				getResources().getDrawable(cn.ucai.git.R.drawable.record_animate_14) };
+		micImages = new Drawable[] { getResources().getDrawable(R.drawable.record_animate_01),
+				getResources().getDrawable(R.drawable.record_animate_02),
+				getResources().getDrawable(R.drawable.record_animate_03),
+				getResources().getDrawable(R.drawable.record_animate_04),
+				getResources().getDrawable(R.drawable.record_animate_05),
+				getResources().getDrawable(R.drawable.record_animate_06),
+				getResources().getDrawable(R.drawable.record_animate_07),
+				getResources().getDrawable(R.drawable.record_animate_08),
+				getResources().getDrawable(R.drawable.record_animate_09),
+				getResources().getDrawable(R.drawable.record_animate_10),
+				getResources().getDrawable(R.drawable.record_animate_11),
+				getResources().getDrawable(R.drawable.record_animate_12),
+				getResources().getDrawable(R.drawable.record_animate_13),
+				getResources().getDrawable(R.drawable.record_animate_14) };
 
 		// 表情list
 		reslist = getExpressionRes(35);
@@ -275,9 +285,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (hasFocus) {
-					edittext_layout.setBackgroundResource(cn.ucai.git.R.drawable.input_bar_bg_active);
+					edittext_layout.setBackgroundResource(R.drawable.input_bar_bg_active);
 				} else {
-					edittext_layout.setBackgroundResource(cn.ucai.git.R.drawable.input_bar_bg_normal);
+					edittext_layout.setBackgroundResource(R.drawable.input_bar_bg_normal);
 				}
 
 			}
@@ -286,7 +296,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 
 			@Override
 			public void onClick(View v) {
-				edittext_layout.setBackgroundResource(cn.ucai.git.R.drawable.input_bar_bg_active);
+				edittext_layout.setBackgroundResource(R.drawable.input_bar_bg_active);
 				more.setVisibility(View.GONE);
 				iv_emoticons_normal.setVisibility(View.VISIBLE);
 				iv_emoticons_checked.setVisibility(View.INVISIBLE);
@@ -318,7 +328,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 			}
 		});
 
-		 swipeRefreshLayout = (SwipeRefreshLayout) findViewById(cn.ucai.git.R.id.chat_swipe_layout);
+		 swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.chat_swipe_layout);
 
 		 swipeRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_bright, android.R.color.holo_green_light,
 		                 android.R.color.holo_orange_light, android.R.color.holo_red_light);
@@ -358,7 +368,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		                                         isloading = false;
 
 		                                 }else{
-		                                     Toast.makeText(ChatActivity.this, getResources().getString(cn.ucai.git.R.string.no_more_messages), Toast.LENGTH_SHORT).show();
+		                                     Toast.makeText(ChatActivity.this, getResources().getString(R.string.no_more_messages), Toast.LENGTH_SHORT).show();
 		                                 }
 		                                 swipeRefreshLayout.setRefreshing(false);
 		                         }
@@ -386,19 +396,19 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 				isRobot = true;
 				String nick = robotMap.get(toChatUsername).getNick();
 				if(!TextUtils.isEmpty(nick)){
-					((TextView) findViewById(cn.ucai.git.R.id.name)).setText(nick);
+					((TextView) findViewById(R.id.name)).setText(nick);
 				}else{
-					((TextView) findViewById(cn.ucai.git.R.id.name)).setText(toChatUsername);
+					((TextView) findViewById(R.id.name)).setText(toChatUsername);
 				}
 			}else{
-				UserUtils.setContactNick(toChatUsername, (TextView) findViewById(cn.ucai.git.R.id.name));
+				UserUtils.setContactNick(toChatUsername, (TextView) findViewById(R.id.name));
 			}
 		} else {
 			// 群聊
-			findViewById(cn.ucai.git.R.id.container_to_group).setVisibility(View.VISIBLE);
-			findViewById(cn.ucai.git.R.id.container_remove).setVisibility(View.GONE);
-			findViewById(cn.ucai.git.R.id.container_voice_call).setVisibility(View.GONE);
-			findViewById(cn.ucai.git.R.id.container_video_call).setVisibility(View.GONE);
+			findViewById(R.id.container_to_group).setVisibility(View.VISIBLE);
+			findViewById(R.id.container_remove).setVisibility(View.GONE);
+			findViewById(R.id.container_voice_call).setVisibility(View.GONE);
+			findViewById(R.id.container_video_call).setVisibility(View.GONE);
 			toChatUsername = getIntent().getStringExtra("groupId");
 
 			if(chatType == CHATTYPE_GROUP){
@@ -509,12 +519,28 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	}
 	
 	protected void onGroupViewCreation(){
-	    group = EMGroupManager.getInstance().getGroup(toChatUsername);
-        
+		members = SuperWeChatApplication.getInstance().getGroupmember().get(toChatUsername);
+		if (members == null) {
+			members = new ArrayList<Member>();
+			new DownloadGroupMemberTask(toChatUsername,ChatActivity.this).execute();
+		}
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<Group> groupArrayList = SuperWeChatApplication.getInstance().getGroupArrayList();
+                for (Group group : groupArrayList) {
+                    if (group.getMGroupHxid().equals(toChatUsername)) {
+                        mGroup = group;
+                        return;
+                    }
+                }
+            }
+        });
+        group = EMGroupManager.getInstance().getGroup(toChatUsername);
         if (group != null){
-            ((TextView) findViewById(cn.ucai.git.R.id.name)).setText(group.getGroupName());
+            ((TextView) findViewById(R.id.name)).setText(group.getGroupName());
         }else{
-            ((TextView) findViewById(cn.ucai.git.R.id.name)).setText(toChatUsername);
+            ((TextView) findViewById(R.id.name)).setText(toChatUsername);
         }
         
         // 监听当前会话的群聊解散被T事件
@@ -536,9 +562,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
                         pd.dismiss();
                         room = EMChatManager.getInstance().getChatRoom(toChatUsername);
                         if(room !=null){
-                            ((TextView) findViewById(cn.ucai.git.R.id.name)).setText(room.getName());
+                            ((TextView) findViewById(R.id.name)).setText(room.getName());
                         }else{
-                            ((TextView) findViewById(cn.ucai.git.R.id.name)).setText(toChatUsername);
+                            ((TextView) findViewById(R.id.name)).setText(toChatUsername);
                         }
                         EMLog.d(TAG, "join room success : " + room.getName());
                         
@@ -622,7 +648,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 					bitmap = ThumbnailUtils.createVideoThumbnail(videoPath, 3);
 					if (bitmap == null) {
 						EMLog.d("chatactivity", "problem load video thumbnail bitmap,use default icon");
-						bitmap = BitmapFactory.decodeResource(getResources(), cn.ucai.git.R.drawable.app_panel_video_icon);
+						bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.app_panel_video_icon);
 					}
 					fos = new FileOutputStream(file);
 
@@ -670,7 +696,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 				    toggleMore(more);
 					sendLocationMsg(latitude, longitude, "", locationAddress);
 				} else {
-					String st = getResources().getString(cn.ucai.git.R.string.unable_to_get_loaction);
+					String st = getResources().getString(R.string.unable_to_get_loaction);
 					Toast.makeText(this, st, Toast.LENGTH_SHORT).show();
 				}
 				// 重发消息
@@ -707,38 +733,38 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 */
 	@Override
 	public void onClick(View view) {
-		String st1 = getResources().getString(cn.ucai.git.R.string.not_connect_to_server);
+		String st1 = getResources().getString(R.string.not_connect_to_server);
 		int id = view.getId();
-		if (id == cn.ucai.git.R.id.btn_send) {// 点击发送按钮(发文字和表情)
+		if (id == R.id.btn_send) {// 点击发送按钮(发文字和表情)
 			String s = mEditTextContent.getText().toString();
 			sendText(s);
-		} else if (id == cn.ucai.git.R.id.btn_take_picture) {
+		} else if (id == R.id.btn_take_picture) {
 			selectPicFromCamera();// 点击照相图标
-		} else if (id == cn.ucai.git.R.id.btn_picture) {
+		} else if (id == R.id.btn_picture) {
 			selectPicFromLocal(); // 点击图片图标
-		} else if (id == cn.ucai.git.R.id.btn_location) { // 位置
+		} else if (id == R.id.btn_location) { // 位置
 			startActivityForResult(new Intent(this, BaiduMapActivity.class), REQUEST_CODE_MAP);
-		} else if (id == cn.ucai.git.R.id.iv_emoticons_normal) { // 点击显示表情框
+		} else if (id == R.id.iv_emoticons_normal) { // 点击显示表情框
 			more.setVisibility(View.VISIBLE);
 			iv_emoticons_normal.setVisibility(View.INVISIBLE);
 			iv_emoticons_checked.setVisibility(View.VISIBLE);
 			btnContainer.setVisibility(View.GONE);
 			emojiIconContainer.setVisibility(View.VISIBLE);
 			hideKeyboard();
-		} else if (id == cn.ucai.git.R.id.iv_emoticons_checked) { // 点击隐藏表情框
+		} else if (id == R.id.iv_emoticons_checked) { // 点击隐藏表情框
 			iv_emoticons_normal.setVisibility(View.VISIBLE);
 			iv_emoticons_checked.setVisibility(View.INVISIBLE);
 			btnContainer.setVisibility(View.VISIBLE);
 			emojiIconContainer.setVisibility(View.GONE);
 			more.setVisibility(View.GONE);
 
-		} else if (id == cn.ucai.git.R.id.btn_video) {
+		} else if (id == R.id.btn_video) {
 			// 点击摄像图标
 			Intent intent = new Intent(ChatActivity.this, ImageGridActivity.class);
 			startActivityForResult(intent, REQUEST_CODE_SELECT_VIDEO);
-		} else if (id == cn.ucai.git.R.id.btn_file) { // 点击文件图标
+		} else if (id == R.id.btn_file) { // 点击文件图标
 			selectFileFromLocal();
-		} else if (id == cn.ucai.git.R.id.btn_voice_call) { // 点击语音电话图标
+		} else if (id == R.id.btn_voice_call) { // 点击语音电话图标
 			if (!EMChatManager.getInstance().isConnected())
 				Toast.makeText(this, st1, Toast.LENGTH_SHORT).show();
 			else{
@@ -747,7 +773,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 				voiceCallBtn.setEnabled(false);
 				toggleMore(null);
 			}
-		} else if (id == cn.ucai.git.R.id.btn_video_call) { // 视频通话
+		} else if (id == R.id.btn_video_call) { // 视频通话
 			if (!EMChatManager.getInstance().isConnected())
 				Toast.makeText(this, st1, Toast.LENGTH_SHORT).show();
 			else{
@@ -851,7 +877,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 */
 	public void selectPicFromCamera() {
 		if (!CommonUtils.isExitsSdcard()) {
-			String st = getResources().getString(cn.ucai.git.R.string.sd_card_does_not_exist);
+			String st = getResources().getString(R.string.sd_card_does_not_exist);
 			Toast.makeText(getApplicationContext(), st, Toast.LENGTH_SHORT).show();
 			return;
 		}
@@ -1042,7 +1068,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	private void sendPicByUri(Uri selectedImage) {
 		String[] filePathColumn = { MediaStore.Images.Media.DATA };
 		Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
-		String st8 = getResources().getString(cn.ucai.git.R.string.cant_find_pictures);
+		String st8 = getResources().getString(R.string.cant_find_pictures);
 		if (cursor != null) {
 			cursor.moveToFirst();
 			int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
@@ -1125,12 +1151,12 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		}
 		File file = new File(filePath);
 		if (file == null || !file.exists()) {
-			String st7 = getResources().getString(cn.ucai.git.R.string.File_does_not_exist);
+			String st7 = getResources().getString(R.string.File_does_not_exist);
 			Toast.makeText(getApplicationContext(), st7, Toast.LENGTH_SHORT).show();
 			return;
 		}
 		if (file.length() > 10 * 1024 * 1024) {
-			String st6 = getResources().getString(cn.ucai.git.R.string.The_file_is_not_greater_than_10_m);
+			String st6 = getResources().getString(R.string.The_file_is_not_greater_than_10_m);
 			Toast.makeText(getApplicationContext(), st6, Toast.LENGTH_SHORT).show();
 			return;
 		}
@@ -1229,7 +1255,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 * @param view
 	 */
 	public void emptyHistory(View view) {
-		String st5 = getResources().getString(cn.ucai.git.R.string.Whether_to_empty_all_chats);
+		String st5 = getResources().getString(R.string.Whether_to_empty_all_chats);
 		startActivityForResult(new Intent(this, AlertDialog.class).putExtra("titleIsCancel", true).putExtra("msg", st5)
 				.putExtra("cancel", true), REQUEST_CODE_EMPTY_HISTORY);
 	}
@@ -1241,11 +1267,13 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 */
 	public void toGroupDetails(View view) {
 		if (room == null && group == null) {
-			Toast.makeText(getApplicationContext(), cn.ucai.git.R.string.gorup_not_found, Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), R.string.gorup_not_found, Toast.LENGTH_SHORT).show();
 			return;
 		}
 		if(chatType == CHATTYPE_GROUP){
-			startActivityForResult((new Intent(this, GroupDetailsActivity.class).putExtra("groupId", toChatUsername)),
+			startActivityForResult((new Intent(this, GroupDetailsActivity.class)
+                    .putExtra("groupId", toChatUsername)
+                    .putExtra("mGroup",mGroup)),
 					REQUEST_CODE_GROUP_DETAIL);
 		}else{
 			startActivityForResult((new Intent(this, ChatRoomDetailsActivity.class).putExtra("roomId", toChatUsername)),
@@ -1308,7 +1336,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 			switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN:
 				if (!CommonUtils.isExitsSdcard()) {
-					String st4 = getResources().getString(cn.ucai.git.R.string.Send_voice_need_sdcard_support);
+					String st4 = getResources().getString(R.string.Send_voice_need_sdcard_support);
 					Toast.makeText(ChatActivity.this, st4, Toast.LENGTH_SHORT).show();
 					return false;
 				}
@@ -1318,7 +1346,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 					if (VoicePlayClickListener.isPlaying)
 						VoicePlayClickListener.currentPlayListener.stopPlayVoice();
 					recordingContainer.setVisibility(View.VISIBLE);
-					recordingHint.setText(getString(cn.ucai.git.R.string.move_up_to_cancel));
+					recordingHint.setText(getString(R.string.move_up_to_cancel));
 					recordingHint.setBackgroundColor(Color.TRANSPARENT);
 					voiceRecorder.startRecording(null, toChatUsername, getApplicationContext());
 				} catch (Exception e) {
@@ -1329,17 +1357,17 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 					if (voiceRecorder != null)
 						voiceRecorder.discardRecording();
 					recordingContainer.setVisibility(View.INVISIBLE);
-					Toast.makeText(ChatActivity.this, cn.ucai.git.R.string.recoding_fail, Toast.LENGTH_SHORT).show();
+					Toast.makeText(ChatActivity.this, R.string.recoding_fail, Toast.LENGTH_SHORT).show();
 					return false;
 				}
 
 				return true;
 			case MotionEvent.ACTION_MOVE: {
 				if (event.getY() < 0) {
-					recordingHint.setText(getString(cn.ucai.git.R.string.release_to_cancel));
-					recordingHint.setBackgroundResource(cn.ucai.git.R.drawable.recording_text_hint_bg);
+					recordingHint.setText(getString(R.string.release_to_cancel));
+					recordingHint.setBackgroundResource(R.drawable.recording_text_hint_bg);
 				} else {
-					recordingHint.setText(getString(cn.ucai.git.R.string.move_up_to_cancel));
+					recordingHint.setText(getString(R.string.move_up_to_cancel));
 					recordingHint.setBackgroundColor(Color.TRANSPARENT);
 				}
 				return true;
@@ -1355,9 +1383,9 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 
 				} else {
 					// stop recording and send voice file
-					String st1 = getResources().getString(cn.ucai.git.R.string.Recording_without_permission);
-					String st2 = getResources().getString(cn.ucai.git.R.string.The_recording_time_is_too_short);
-					String st3 = getResources().getString(cn.ucai.git.R.string.send_failure_please);
+					String st1 = getResources().getString(R.string.Recording_without_permission);
+					String st2 = getResources().getString(R.string.The_recording_time_is_too_short);
+					String st3 = getResources().getString(R.string.send_failure_please);
 					try {
 						int length = voiceRecorder.stopRecoding();
 						if (length > 0) {
@@ -1391,8 +1419,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 * @return
 	 */
 	private View getGridChildView(int i) {
-		View view = View.inflate(this, cn.ucai.git.R.layout.expression_gridview, null);
-		ExpandGridView gv = (ExpandGridView) view.findViewById(cn.ucai.git.R.id.gridview);
+		View view = View.inflate(this, R.layout.expression_gridview, null);
+		ExpandGridView gv = (ExpandGridView) view.findViewById(R.id.gridview);
 		List<String> list = new ArrayList<String>();
 		if (i == 1) {
 			List<String> list1 = reslist.subList(0, 20);
@@ -1469,13 +1497,16 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		if(groupListener != null){
 		    EMGroupManager.getInstance().removeGroupChangeListener(groupListener);
 		}
+		if (mReceiver != null) {
+			unregisterReceiver(mReceiver);
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		if (group != null)
-			((TextView) findViewById(cn.ucai.git.R.id.name)).setText(group.getGroupName());
+			((TextView) findViewById(R.id.name)).setText(group.getGroupName());
 		voiceCallBtn.setEnabled(true);
 		videoCallBtn.setEnabled(true);
 
@@ -1543,7 +1574,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 */
 	private void addUserToBlacklist(final String username) {
 		final ProgressDialog pd = new ProgressDialog(this);
-		pd.setMessage(getString(cn.ucai.git.R.string.Is_moved_into_blacklist));
+		pd.setMessage(getString(R.string.Is_moved_into_blacklist));
 		pd.setCanceledOnTouchOutside(false);
 		pd.show();
 		new Thread(new Runnable() {
@@ -1553,7 +1584,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 					runOnUiThread(new Runnable() {
 						public void run() {
 							pd.dismiss();
-							Toast.makeText(getApplicationContext(), cn.ucai.git.R.string.Move_into_blacklist_success, Toast.LENGTH_SHORT).show();
+							Toast.makeText(getApplicationContext(), R.string.Move_into_blacklist_success, Toast.LENGTH_SHORT).show();
 						}
 					});
 				} catch (EaseMobException e) {
@@ -1561,7 +1592,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 					runOnUiThread(new Runnable() {
 						public void run() {
 							pd.dismiss();
-							Toast.makeText(getApplicationContext(), cn.ucai.git.R.string.Move_into_blacklist_failure, Toast.LENGTH_SHORT).show();
+							Toast.makeText(getApplicationContext(), R.string.Move_into_blacklist_failure, Toast.LENGTH_SHORT).show();
 						}
 					});
 				}
@@ -1713,7 +1744,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		@Override
 		public void onUserRemoved(final String groupId, String groupName) {
 			runOnUiThread(new Runnable() {
-				String st13 = getResources().getString(cn.ucai.git.R.string.you_are_group);
+				String st13 = getResources().getString(R.string.you_are_group);
 
 				public void run() {
 					if (toChatUsername.equals(groupId)) {
@@ -1730,7 +1761,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		public void onGroupDestroy(final String groupId, String groupName) {
 			// 群组解散正好在此页面，提示群组被解散，并finish此页面
 			runOnUiThread(new Runnable() {
-				String st14 = getResources().getString(cn.ucai.git.R.string.the_current_group);
+				String st14 = getResources().getString(R.string.the_current_group);
 
 				public void run() {
 					if (toChatUsername.equals(groupId)) {
@@ -1752,5 +1783,18 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	public ListView getListView() {
 		return listView;
 	}
+	class ChatChangedReceiver extends BroadcastReceiver {
 
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			adapter.notifyDataSetChanged();
+		}
+	}
+
+	ChatChangedReceiver mReceiver;
+	private void registerChatListChangedReceiver() {
+		mReceiver = new ChatChangedReceiver();
+		IntentFilter filter = new IntentFilter("update_members_list");
+		registerReceiver(mReceiver, filter);
+	}
 }
