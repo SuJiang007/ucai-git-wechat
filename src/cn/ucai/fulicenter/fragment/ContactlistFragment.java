@@ -60,11 +60,8 @@ import cn.ucai.fulicenter.R;
 import cn.ucai.fulicenter.SuperWeChatApplication;
 import cn.ucai.fulicenter.activity.AddContactActivity;
 import cn.ucai.fulicenter.activity.ChatActivity;
-import cn.ucai.fulicenter.activity.GroupsActivity;
 import cn.ucai.fulicenter.activity.MainActivity;
 import cn.ucai.fulicenter.activity.NewFriendsMsgActivity;
-import cn.ucai.fulicenter.activity.PublicChatRoomsActivity;
-import cn.ucai.fulicenter.activity.RobotsActivity;
 import cn.ucai.fulicenter.adapter.ContactAdapter;
 import cn.ucai.fulicenter.applib.controller.HXSDKHelper;
 import cn.ucai.fulicenter.applib.controller.HXSDKHelper.HXSyncListener;
@@ -248,16 +245,7 @@ public class ContactlistFragment extends Fragment {
 					EMUser user = ((DemoHXSDKHelper) HXSDKHelper.getInstance()).getContactList().get(Constant.NEW_FRIENDS_USERNAME);
 					user.setUnreadMsgCount(0);
 					startActivity(new Intent(getActivity(), NewFriendsMsgActivity.class));
-				} else if (Constant.GROUP_USERNAME.equals(username)) {
-					// 进入群聊列表页面
-					startActivity(new Intent(getActivity(), GroupsActivity.class));
-				} else if(Constant.CHAT_ROOM.equals(username)){
-					//进入聊天室列表页面
-				    startActivity(new Intent(getActivity(), PublicChatRoomsActivity.class));
-				}else if(Constant.CHAT_ROBOT.equals(username)){
-					//进入Robot列表页面
-					startActivity(new Intent(getActivity(), RobotsActivity.class));
-				}else {
+				} else {
 					// demo中直接进入聊天页面，实际一般是进入用户详情页
 					startActivity(new Intent(getActivity(), ChatActivity.class).putExtra("userId", adapter.getItem(position).getMContactCname()));
 				}
@@ -499,16 +487,6 @@ public class ContactlistFragment extends Fragment {
 		//获取本地好友列表
 		ArrayList<Contact> contactArrayList = SuperWeChatApplication.getInstance().getContactArrayList();
 		mContactList.addAll(contactArrayList);
-		//添加群聊
-		Contact groupUser = new Contact();
-		String strGroups = getActivity().getString(R.string.group_chat);
-		groupUser.setMContactCname(Constant.GROUP_USERNAME);
-		groupUser.setMUserName(Constant.GROUP_USERNAME);
-		groupUser.setMUserNick(strGroups);
-		groupUser.setMContactId(-2);
-		if (contactArrayList.indexOf(groupUser)==-1) {
-			mContactList.add(0,groupUser);
-		}
 
 		//添加申请与通知
 

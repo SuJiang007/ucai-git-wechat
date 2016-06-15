@@ -12,8 +12,6 @@ import cn.ucai.fulicenter.applib.controller.HXSDKHelper;
 import cn.ucai.fulicenter.DemoHXSDKHelper;
 import cn.ucai.fulicenter.R;
 import cn.ucai.fulicenter.bean.Contact;
-import cn.ucai.fulicenter.bean.Group;
-import cn.ucai.fulicenter.bean.Member;
 import cn.ucai.fulicenter.bean.User;
 import cn.ucai.fulicenter.data.RequestManager;
 import cn.ucai.fulicenter.domain.EMUser;
@@ -22,7 +20,6 @@ import com.android.volley.toolbox.NetworkImageView;
 import com.easemob.util.HanziToPinyin;
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
 
 public class UserUtils {
     /**
@@ -151,24 +148,6 @@ public class UserUtils {
 		}
 	}
 
-	public static void setGroupMemberNick(String hxid, String username, TextView textView) {
-		Member groupMember = getGroupMember(hxid, username);
-		if (groupMember != null) {
-			setUserBeanNick(groupMember,textView);
-		}
-	}
-	private static Member getGroupMember(String hxid, String username) {
-		ArrayList<Member> members = SuperWeChatApplication.getInstance().getGroupmember().get(hxid);
-		if (members != null) {
-			for (Member member : members) {
-				if (member.getMMemberUserName().equals(username)) {
-					return member;
-				}
-			}
-		}
-		return null;
-	}
-
 	/**
      * 保存或更新某个用户
      * @param newUser
@@ -202,35 +181,6 @@ public class UserUtils {
 		}
 	}
 
-	public static void setGroupBeanAvatar(String mGroupHxid, NetworkImageView imageView) {
-		if (mGroupHxid != null && !mGroupHxid.isEmpty()) {
-			setGroupAvatar(getGroupAvatarPath(mGroupHxid), imageView);
-		}
-	}
-
-	private static String getGroupAvatarPath(String hxid) {
-		if (hxid == null || hxid.isEmpty()) return null;
-		return I.REQUEST_DOWNLOAD_AVATAR_GROUP + hxid;
-	}
-
-	private static void setGroupAvatar(String url,NetworkImageView imageView) {
-		if (url==null || url.isEmpty())return;
-		imageView.setDefaultImageResId(R.drawable.group_icon);
-		imageView.setImageUrl(url,RequestManager.getImageLoader());
-		imageView.setErrorImageResId(R.drawable.group_icon);
-	}
-
-	public static Group getGroupBeanFromHXID(String hxid) {
-		if (hxid != null && !hxid.isEmpty()) {
-			ArrayList<Group> list = SuperWeChatApplication.getInstance().getGroupArrayList();
-			for (Group group : list) {
-				if (group.getMGroupHxid().equals(hxid)) {
-					return group;
-				}
-			}
-		}
-		return null;
-	}
 	public static String hanziTopinyin(String Hanzi) {
 		String pinyin = "";
 		for (int i=0;i<Hanzi.length();i++) {

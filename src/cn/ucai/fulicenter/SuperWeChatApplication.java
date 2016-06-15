@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import cn.ucai.fulicenter.bean.Contact;
-import cn.ucai.fulicenter.bean.Group;
-import cn.ucai.fulicenter.bean.Member;
 import cn.ucai.fulicenter.bean.User;
 import cn.ucai.fulicenter.data.RequestManager;
 
@@ -35,6 +33,7 @@ public class SuperWeChatApplication extends Application {
 	public final String PREF_USERNAME = "username";
 //    public static String ROOT_SERVER = "http://115.28.2.61:8080/SuperWeChatServer/Server";
 	public static String ROOT_SERVER = "http://10.0.2.2:9999/SuperWeChatServer/Server";
+	public static String SERVER_ROOT="http://10.0.2.2:9999/FuLiCenterServer/Server";
 	
 	/**
 	 * 当前用户nickname,为了苹果推送不是userid而是昵称
@@ -129,19 +128,6 @@ public class SuperWeChatApplication extends Application {
 	/** 全局当前用户好友集合*/
 	private HashMap<String, Contact> map = new HashMap<String, Contact>();
 	/** 全局群组集合*/
-	private ArrayList<Group> groupArrayList = new ArrayList<Group>();
-	/** 全局群组公共的列表*/
-	private ArrayList<Group> publicArrayList = new ArrayList<Group>();
-	/** 全局群组成员的列表*/
-	private HashMap<String, ArrayList<Member>> groupmember = new HashMap<String, ArrayList<Member>>();
-
-	public HashMap<String, ArrayList<Member>> getGroupmember() {
-		return groupmember;
-	}
-
-	public void setGroupmember(HashMap<String, ArrayList<Member>> groupmember) {
-		this.groupmember = groupmember;
-	}
 
 	public User getUser() {
 		return user;
@@ -167,19 +153,4 @@ public class SuperWeChatApplication extends Application {
 		this.map = map;
 	}
 
-	public ArrayList<Group> getGroupArrayList() {
-		return groupArrayList;
-	}
-
-	public void setGroupArrayList(ArrayList<Group> groupArrayList) {
-		this.groupArrayList = groupArrayList;
-	}
-
-	public ArrayList<Group> getPublicArrayList() {
-		return publicArrayList;
-	}
-
-	public void setPublicArrayList(ArrayList<Group> publicArrayList) {
-		this.publicArrayList = publicArrayList;
-	}
 }

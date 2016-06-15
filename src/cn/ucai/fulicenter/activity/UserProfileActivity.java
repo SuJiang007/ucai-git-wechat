@@ -103,13 +103,6 @@ public class UserProfileActivity extends BaseActivity implements OnClickListener
             UserUtils.setCurrentUserBeanNick(tvNickName);
             UserUtils.setCurrentUserAvatar(headAvatar);
         } else {
-            if (groupId != null) {
-                UserUtils.setGroupMemberNick(groupId,username,tvNickName);
-                UserUtils.setUserAvatar(UserUtils.getAvatarUrl(username),headAvatar);
-            } else {
-                UserUtils.setContactNick(username, tvNickName);
-                UserUtils.setUserBeanAvatar(username, headAvatar);
-            }
             tvUsername.setText(username);
 //			asyncFetchUserInfo(username);
         }

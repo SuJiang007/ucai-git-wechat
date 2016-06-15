@@ -66,7 +66,6 @@ public class RegisterActivity extends BaseActivity {
 
 	private void setListener() {
 		setOnRegister();
-		setOnLogin();
 		setOnAvatarListener();
 	}
 
@@ -90,15 +89,6 @@ public class RegisterActivity extends BaseActivity {
 		if (resultCode == RESULT_OK) {
 			monSetAvatarListener.setAvatar(requestCode,data,iv_avatar);
 		}
-	}
-
-	private void setOnLogin() {
-		findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				finish();
-			}
-		});
 	}
 
 	private void initView() {

@@ -8,19 +8,15 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.view.animation.AlphaAnimation;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMGroupManager;
 import cn.ucai.fulicenter.DemoHXSDKHelper;
-import cn.ucai.fulicenter.I;
 import cn.ucai.fulicenter.R;
 import cn.ucai.fulicenter.SuperWeChatApplication;
 import cn.ucai.fulicenter.bean.User;
 import cn.ucai.fulicenter.db.UserDao;
-import cn.ucai.fulicenter.task.DownloadAllGroupTask;
 import cn.ucai.fulicenter.task.DownloadContactListTask;
-import cn.ucai.fulicenter.task.DownloadPublicGroupTask;
 
 /**
  * 开屏页
@@ -28,7 +24,6 @@ import cn.ucai.fulicenter.task.DownloadPublicGroupTask;
  */
 public class SplashActivity extends BaseActivity {
 	private RelativeLayout rootLayout;
-	private TextView versionText;
 	Context mContext;
 	
 	private static final int sleepTime = 2000;
@@ -41,9 +36,7 @@ public class SplashActivity extends BaseActivity {
 
 
 		rootLayout = (RelativeLayout) findViewById(R.id.splash_root);
-		versionText = (TextView) findViewById(R.id.tv_version);
 
-		versionText.setText(getVersion());
 		AlphaAnimation animation = new AlphaAnimation(0.3f, 1.0f);
 		animation.setDuration(1500);
 		rootLayout.startAnimation(animation);
@@ -57,9 +50,7 @@ public class SplashActivity extends BaseActivity {
 			UserDao dao = new UserDao(mContext);
 			User user = dao.findUser(userName);
 			SuperWeChatApplication.getInstance().setUser(user);
-			new DownloadAllGroupTask(userName, mContext).execute();
 			new DownloadContactListTask(userName,mContext).execute();
-			new DownloadPublicGroupTask(I.PAGE_ID_DEFAULT, I.PAGE_SIZE_DEFAULT, userName, mContext).execute();
 		}
 		new Thread(new Runnable() {
 			public void run() {
