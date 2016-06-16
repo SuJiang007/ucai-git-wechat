@@ -286,7 +286,7 @@ public class ContactlistFragment extends Fragment {
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
-		if (((AdapterContextMenuInfo) menuInfo).position > 1) {
+		if (((AdapterContextMenuInfo) menuInfo).position > 0) {
 		    toBeProcessUser = adapter.getItem(((AdapterContextMenuInfo) menuInfo).position);
 		    toBeProcessUsername = toBeProcessUser.getMContactCname();
 			getActivity().getMenuInflater().inflate(cn.ucai.fulicenter.R.menu.context_contact_list, menu);

@@ -16,10 +16,16 @@ package cn.ucai.fulicenter.utils;
 import android.content.Context;
 import android.os.Environment;
 
+import com.android.volley.toolbox.NetworkImageView;
 import com.easemob.util.EMLog;
 import com.easemob.util.PathUtil;
 
 import java.io.File;
+
+import cn.ucai.fulicenter.I;
+import cn.ucai.fulicenter.R;
+import cn.ucai.fulicenter.SuperWeChatApplication;
+import cn.ucai.fulicenter.data.RequestManager;
 
 public class ImageUtils {
 //	public static String getThumbnailImagePath(String imagePath) {
@@ -54,5 +60,13 @@ public class ImageUtils {
 			folder.mkdir();
 		}
 		return folder.getAbsolutePath();
+	}
+
+	public static void setNewGoodthumb(String goodsThumb, NetworkImageView mNetiv_photo) {
+		String path = SuperWeChatApplication.SERVER_ROOT + "?" + "request=" + I.REQUEST_DOWNLOAD_NEW_GOOD
+				+ "&" + I.FILE_NAME + "=" + goodsThumb;
+		mNetiv_photo.setImageUrl(path, RequestManager.getImageLoader());
+		mNetiv_photo.setDefaultImageResId(R.drawable.nopic);
+		mNetiv_photo.setErrorImageResId(R.drawable.nopic);
 	}
 }
