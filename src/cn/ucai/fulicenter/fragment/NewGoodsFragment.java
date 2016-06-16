@@ -166,7 +166,7 @@ public class NewGoodsFragment extends Fragment {
         mrcont.setHasFixedSize(true);
         mrcont.setLayoutManager(manager);
         mArratList = new ArrayList<NewGoodBean>();
-        mAdapter = new NewGoodAdapter(mContext, mArratList);
+        mAdapter = new NewGoodAdapter(mContext, mArratList,I.SORT_BY_ADDTIME_DESC);
         mrcont.setAdapter(mAdapter);
     }
 }

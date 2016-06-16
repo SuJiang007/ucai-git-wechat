@@ -65,8 +65,19 @@ public class ImageUtils {
 	public static void setNewGoodthumb(String goodsThumb, NetworkImageView mNetiv_photo) {
 		String path = SuperWeChatApplication.SERVER_ROOT + "?" + "request=" + I.REQUEST_DOWNLOAD_NEW_GOOD
 				+ "&" + I.FILE_NAME + "=" + goodsThumb;
-		mNetiv_photo.setImageUrl(path, RequestManager.getImageLoader());
-		mNetiv_photo.setDefaultImageResId(R.drawable.nopic);
-		mNetiv_photo.setErrorImageResId(R.drawable.nopic);
+		setThumb(path,mNetiv_photo);
+	}
+
+	public static void setGoodDetailThumb(String colorImg, NetworkImageView imageView) {
+		String url = SuperWeChatApplication.SERVER_ROOT
+				+ "?" + I.KEY_REQUEST + "=" + I.REQUEST_DOWNLOAD_COLOR_IMG
+				+ "&" + I.Color.COLOR_IMG + "=" + colorImg;
+		setThumb(url, imageView);
+	}
+
+	private static void setThumb(String url, NetworkImageView imageView) {
+		imageView.setImageUrl(url, RequestManager.getImageLoader());
+		imageView.setDefaultImageResId(R.drawable.nopic);
+		imageView.setErrorImageResId(R.drawable.nopic);
 	}
 }

@@ -49,6 +49,12 @@ public class Utils {
         return array;
     }
 
+    /**
+     * px转dp
+     * @param context
+     * @param msg
+     * @return
+     */
     public static String getResourceString(Context context, int msg){
         if(msg<=0) return null;
         String msgStr = msg+"";
@@ -56,4 +62,14 @@ public class Utils {
         int resId = context.getResources().getIdentifier(msgStr, "string", context.getPackageName());
         return context.getResources().getString(resId);
     }
+    public static int px2dp(Context context,int px){
+        int density = (int) context.getResources().getDisplayMetrics().density;
+        return px/density;
+    }
+
+    public static int dp2px(Context context,int dp){
+        int density = (int) context.getResources().getDisplayMetrics().density;
+        return dp*density;
+    }
+
 }
