@@ -431,7 +431,7 @@ public interface I {
     /**
      * 下载用户头像的请求
      */
-    String REQUEST_DOWNLOAD_AVATAR_USER = SuperWeChatApplication.ROOT_SERVER + "?" + KEY_REQUEST + "="
+    String REQUEST_DOWNLOAD_AVATAR_USER = FuliCenterApplication.ROOT_SERVER + "?" + KEY_REQUEST + "="
             + REQUEST_DOWNLOAD_AVATAR + "&" + AVATAR_TYPE + "=";
 
     /**
@@ -510,7 +510,7 @@ public interface I {
     /**
      * 下载商品相册图像的URL
      */
-    String DOWNLOAD_AVATAR_URL = SuperWeChatApplication.SERVER_ROOT +
+    String DOWNLOAD_AVATAR_URL = FuliCenterApplication.SERVER_ROOT +
             "?request=" + REQUEST_DOWNLOAD_AVATAR + "&avatar=";
 
     /**
@@ -520,7 +520,7 @@ public interface I {
     /**
      * 下载商品相册图像的接口
      */
-    String DOWNLOAD_ALBUM_IMG_URL = SuperWeChatApplication.SERVER_ROOT +
+    String DOWNLOAD_ALBUM_IMG_URL = FuliCenterApplication.SERVER_ROOT +
             "?request=" + REQUEST_DOWNLOAD_ALBUM_IMG + "&img_url=";
 
     /**
@@ -530,7 +530,7 @@ public interface I {
     /**
      * 下载精选首页图像的接口
      */
-    String DOWNLOAD_BOUTIQUE_IMG_URL = SuperWeChatApplication.SERVER_ROOT +
+    String DOWNLOAD_BOUTIQUE_IMG_URL = FuliCenterApplication.SERVER_ROOT +
             "?request=" + REQUEST_DOWNLOAD_BOUTIQUE_IMG + "&" + Boutique.IMAGE_URL + "=";
 
     /**
@@ -540,7 +540,7 @@ public interface I {
     /**
      * 下载分类商品大类图像的接口
      */
-    String DOWNLOAD_DOWNLOAD_CATEGORY_GROUP_IMAGE_URL = SuperWeChatApplication.SERVER_ROOT +
+    String DOWNLOAD_DOWNLOAD_CATEGORY_GROUP_IMAGE_URL = FuliCenterApplication.SERVER_ROOT +
             "?request=" + REQUEST_DOWNLOAD_CATEGORY_GROUP_IMAGE
             + "&" + D.CategoryGroup.IMAGE_URL + "=";
 
@@ -551,7 +551,7 @@ public interface I {
     /**
      * 下载收藏商品图像的接口
      */
-    String DOWNLOAD_GOODS_THUMB_URL = SuperWeChatApplication.SERVER_ROOT +
+    String DOWNLOAD_GOODS_THUMB_URL = FuliCenterApplication.SERVER_ROOT +
             "?request=" + REQUEST_DOWNLOAD_GOODS_THUMB
             + "&" + Collect.GOODS_THUMB + "=";
 
@@ -562,7 +562,7 @@ public interface I {
     /**
      * 下载分类商品小类图像的接口
      */
-    String DOWNLOAD_DOWNLOAD_CATEGORY_CHILD_IMAGE_URL = SuperWeChatApplication.SERVER_ROOT +
+    String DOWNLOAD_DOWNLOAD_CATEGORY_CHILD_IMAGE_URL = FuliCenterApplication.SERVER_ROOT +
             "?request=" + REQUEST_DOWNLOAD_CATEGORY_GROUP_IMAGE
             + "&" + D.CategoryChild.IMAGE_URL + "=";
 
@@ -572,5 +572,5 @@ public interface I {
     /**
      * 壹收款服务端支付URL
      */
-    String PAY_URL = SuperWeChatApplication.SERVER_ROOT + "?request=" + I.REQUEST_PAY;
+    String PAY_URL = FuliCenterApplication.SERVER_ROOT + "?request=" + I.REQUEST_PAY;
 }

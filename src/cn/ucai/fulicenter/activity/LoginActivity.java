@@ -48,7 +48,7 @@ import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 
 import cn.ucai.fulicenter.Constant;
-import cn.ucai.fulicenter.SuperWeChatApplication;
+import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.DemoHXSDKHelper;
 import cn.ucai.fulicenter.R;
 import cn.ucai.fulicenter.bean.User;
@@ -98,8 +98,8 @@ public class LoginActivity extends BaseActivity {
         passwordEditText = (EditText) findViewById(R.id.password);
 
 
-        if (SuperWeChatApplication.getInstance().getUserName() != null) {
-            usernameEditText.setText(SuperWeChatApplication.getInstance().getUserName());
+        if (FuliCenterApplication.getInstance().getUserName() != null) {
+            usernameEditText.setText(FuliCenterApplication.getInstance().getUserName());
         }
         setListener();
     }
@@ -229,12 +229,12 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void saveUser(User user) {
-        SuperWeChatApplication instance = SuperWeChatApplication.getInstance();
+        FuliCenterApplication instance = FuliCenterApplication.getInstance();
         // 登陆成功，保存用户名密码
         instance.setUser(user);
         instance.setUserName(currentUsername);
         instance.setPassword(currentPassword);
-        SuperWeChatApplication.currentUserNick = user.getMUserNick();
+        FuliCenterApplication.currentUserNick = user.getMUserNick();
     }
 
     private void loginSuccess() {
@@ -268,7 +268,7 @@ public class LoginActivity extends BaseActivity {
         }
         // 更新当前用户的nickname 此方法的作用是在ios离线推送时能够显示用户nick
         boolean updatenick = EMChatManager.getInstance().updateCurrentUserNick(
-                SuperWeChatApplication.currentUserNick.trim());
+                FuliCenterApplication.currentUserNick.trim());
         if (!updatenick) {
             Log.e("LoginActivity", "update current user nick fail");
         }
@@ -287,7 +287,7 @@ public class LoginActivity extends BaseActivity {
 
     private void save2SD() {
         final OkHttpUtils<Message> utils = new OkHttpUtils<Message>();
-        utils.url(SuperWeChatApplication.ROOT_SERVER)
+        utils.url(FuliCenterApplication.ROOT_SERVER)
                 .addParam(I.KEY_REQUEST, I.REQUEST_DOWNLOAD_AVATAR)
                 .addParam(I.AVATAR_TYPE, currentUsername)
                 .doInBackground(new Callback() {

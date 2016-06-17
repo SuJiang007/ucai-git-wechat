@@ -32,7 +32,7 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.NetworkImageView;
 import com.easemob.chat.EMContactManager;
 
-import cn.ucai.fulicenter.SuperWeChatApplication;
+import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.DemoHXSDKHelper;
 import cn.ucai.fulicenter.R;
 import cn.ucai.fulicenter.bean.User;
@@ -83,7 +83,7 @@ public class AddContactActivity extends BaseActivity {
             return;
         }
         toAddUsername = name;
-        if (SuperWeChatApplication.getInstance().getUserName().equals(nameText.getText().toString())) {
+        if (FuliCenterApplication.getInstance().getUserName().equals(nameText.getText().toString())) {
             String str = getString(R.string.not_add_myself);
             startActivity(new Intent(this, AlertDialog.class).putExtra("msg", str));
             return;
@@ -109,7 +109,7 @@ public class AddContactActivity extends BaseActivity {
             @Override
             public void onResponse(User user) {
                 if (user != null) {
-                    if (SuperWeChatApplication.getInstance().
+                    if (FuliCenterApplication.getInstance().
                             getMap().containsKey(user.getMUserName())) {
                         startActivity(new Intent(AddContactActivity.this, UserProfileActivity.class).
                                 putExtra("username", user.getMUserName()));
@@ -142,7 +142,7 @@ public class AddContactActivity extends BaseActivity {
      * @param view
      */
     public void addContact(View view) {
-        if (SuperWeChatApplication.getInstance().getUserName().equals(nameText.getText().toString())) {
+        if (FuliCenterApplication.getInstance().getUserName().equals(nameText.getText().toString())) {
             String str = getString(R.string.not_add_myself);
             startActivity(new Intent(this, AlertDialog.class).putExtra("msg", str));
             return;

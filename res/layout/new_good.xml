@@ -7,7 +7,6 @@
     android:paddingRight="5dp"
     android:paddingTop="5dp"
     android:paddingLeft="5dp"
-
     android:id="@+id/new_good_detail">
 
     <com.android.volley.toolbox.NetworkImageView

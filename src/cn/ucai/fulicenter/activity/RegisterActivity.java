@@ -30,7 +30,7 @@ import java.io.File;
 
 import cn.ucai.fulicenter.I;
 import cn.ucai.fulicenter.R;
-import cn.ucai.fulicenter.SuperWeChatApplication;
+import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.bean.Message;
 import cn.ucai.fulicenter.data.OkHttpUtils;
 import cn.ucai.fulicenter.listener.OnSetAvatarListener;
@@ -152,7 +152,7 @@ public class RegisterActivity extends BaseActivity {
 		//如果环信服务器注册失败，删除服务器上面的账号和头像
 		File file = new File(ImageUtils.getAvatarpath(RegisterActivity.this, I.AVATAR_TYPE_USER_PATH), mAvatar + I.AVATAR_SUFFIX_JPG);
 		final OkHttpUtils<Message> utils = new OkHttpUtils<>();
-		utils.url(SuperWeChatApplication.ROOT_SERVER)
+		utils.url(FuliCenterApplication.ROOT_SERVER)
 				.addParam(I.KEY_REQUEST,I.REQUEST_REGISTER)
 				.addParam(I.User.USER_NAME,username)
 				.addParam(I.User.NICK,nick)
@@ -190,7 +190,7 @@ public class RegisterActivity extends BaseActivity {
 							if (!RegisterActivity.this.isFinishing())
 								pd.dismiss();
 							// 保存用户名
-							SuperWeChatApplication.getInstance().setUserName(username);
+							FuliCenterApplication.getInstance().setUserName(username);
 							Toast.makeText(getApplicationContext(), getResources().getString(R.string.Registered_successfully), Toast.LENGTH_SHORT).show();
 							finish();
 						}
@@ -198,7 +198,7 @@ public class RegisterActivity extends BaseActivity {
 				} catch (final EaseMobException e) {
 					////10.0.2.2:8080/SuperWeChatServer/Server?request=unregister&m_user_name=
 					OkHttpUtils<Message> utils = new OkHttpUtils<Message>();
-					utils.url(SuperWeChatApplication.ROOT_SERVER)
+					utils.url(FuliCenterApplication.ROOT_SERVER)
 							.addParam(I.KEY_REQUEST,I.REQUEST_UNREGISTER)
 							.addParam(I.User.USER_NAME,username)
 							.targetClass(Message.class)

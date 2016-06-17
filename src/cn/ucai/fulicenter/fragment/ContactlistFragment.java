@@ -57,7 +57,7 @@ import cn.ucai.fulicenter.Constant;
 import cn.ucai.fulicenter.DemoHXSDKHelper;
 import cn.ucai.fulicenter.I;
 import cn.ucai.fulicenter.R;
-import cn.ucai.fulicenter.SuperWeChatApplication;
+import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.activity.AddContactActivity;
 import cn.ucai.fulicenter.activity.ChatActivity;
 import cn.ucai.fulicenter.activity.MainActivity;
@@ -344,7 +344,7 @@ public class ContactlistFragment extends Fragment {
 		pd.show();
 		try {
 			String path = new ApiParams()
-                    .with(I.Contact.USER_NAME, SuperWeChatApplication.getInstance().getUserName())
+                    .with(I.Contact.USER_NAME, FuliCenterApplication.getInstance().getUserName())
                     .with(I.Contact.CU_NAME, tobeDeleteUser.getMContactCname())
                     .getRequestUrl(I.REQUEST_DELETE_CONTACT);
 			((MainActivity)getActivity()).executeRequest(new GsonRequest<Boolean>(path,Boolean.class,
@@ -388,8 +388,8 @@ public class ContactlistFragment extends Fragment {
 			@Override
 			public void onResponse(Boolean aBoolean) {
 				if (aBoolean) {
-					SuperWeChatApplication.getInstance().getMap().remove(tobeDeleteUser);
-					SuperWeChatApplication.getInstance().getContactArrayList().remove(tobeDeleteUser.getMContactCname());
+					FuliCenterApplication.getInstance().getMap().remove(tobeDeleteUser);
+					FuliCenterApplication.getInstance().getContactArrayList().remove(tobeDeleteUser.getMContactCname());
 					getActivity().sendStickyBroadcast(new Intent("update_contact_list"));
 				}
 			}
@@ -485,7 +485,7 @@ public class ContactlistFragment extends Fragment {
 //		contactList.clear();
 		mContactList.clear();
 		//获取本地好友列表
-		ArrayList<Contact> contactArrayList = SuperWeChatApplication.getInstance().getContactArrayList();
+		ArrayList<Contact> contactArrayList = FuliCenterApplication.getInstance().getContactArrayList();
 		mContactList.addAll(contactArrayList);
 
 		//添加申请与通知

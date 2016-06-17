@@ -46,7 +46,7 @@ import com.easemob.EMNotifierEvent;
 import com.easemob.EMValueCallBack;
 
 import cn.ucai.fulicenter.I;
-import cn.ucai.fulicenter.SuperWeChatApplication;
+import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.applib.controller.HXSDKHelper;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMContactListener;
@@ -494,7 +494,7 @@ public class MainActivity extends BaseActivity implements EMEventListener {
 			// 保存增加的联系人
 			Map<String, EMUser> localUsers = ((DemoHXSDKHelper)HXSDKHelper.getInstance()).getContactList();
 			Map<String, EMUser> toAddUsers = new HashMap<String, EMUser>();
-			HashMap<String, Contact> contactList = SuperWeChatApplication.getInstance().getMap();
+			HashMap<String, Contact> contactList = FuliCenterApplication.getInstance().getMap();
 			ArrayList<String> toAddUserName = new ArrayList<>();
 			boolean isAdd = false;
 			for (String username : usernameList) {
@@ -516,7 +516,7 @@ public class MainActivity extends BaseActivity implements EMEventListener {
 				if (isAdd) {
 					try {
 						String path = new ApiParams()
-                                .with(I.Contact.USER_NAME, SuperWeChatApplication.getInstance().getUserName())
+                                .with(I.Contact.USER_NAME, FuliCenterApplication.getInstance().getUserName())
                                 .with(I.Contact.CU_NAME, name)
                                 .getRequestUrl(I.REQUEST_ADD_CONTACT);
 						executeRequest(new GsonRequest<Contact>(path,Contact.class,
@@ -538,8 +538,8 @@ public class MainActivity extends BaseActivity implements EMEventListener {
 				@Override
 				public void onResponse(Contact contact) {
 					if (contact != null && contact.isResult()) {
-						HashMap<String, Contact> userList = SuperWeChatApplication.getInstance().getMap();
-						ArrayList<Contact> arrayList = SuperWeChatApplication.getInstance().getContactArrayList();
+						HashMap<String, Contact> userList = FuliCenterApplication.getInstance().getMap();
+						ArrayList<Contact> arrayList = FuliCenterApplication.getInstance().getContactArrayList();
 						arrayList.add(contact);
 						userList.put(contact.getMContactCname(), contact);
 						mContext.sendStickyBroadcast(new Intent("update_contact_list"));
@@ -556,7 +556,7 @@ public class MainActivity extends BaseActivity implements EMEventListener {
 		public void onContactDeleted(final List<String> usernameList) {
 			// 被删除
 			Map<String, EMUser> localUsers = ((DemoHXSDKHelper)HXSDKHelper.getInstance()).getContactList();
-			HashMap<String, Contact> map = SuperWeChatApplication.getInstance().getMap();
+			HashMap<String, Contact> map = FuliCenterApplication.getInstance().getMap();
 			ArrayList<String> DeleteUsername = new ArrayList<>();
 			for (String username : usernameList) {
 				localUsers.remove(username);
@@ -570,7 +570,7 @@ public class MainActivity extends BaseActivity implements EMEventListener {
 				for (String name : DeleteUsername) {
 					try {
 						String path = new ApiParams()
-                                .with(I.Contact.USER_NAME, SuperWeChatApplication.getInstance().getUserName())
+                                .with(I.Contact.USER_NAME, FuliCenterApplication.getInstance().getUserName())
                                 .with(I.Contact.CU_NAME, name)
                                 .getRequestUrl(I.REQUEST_DELETE_CONTACT);
 						executeRequest(new GsonRequest<Boolean>(path,Boolean.class,
@@ -604,7 +604,7 @@ public class MainActivity extends BaseActivity implements EMEventListener {
 				@Override
 				public void onResponse(Boolean aBoolean) {
 					if (aBoolean) {
-						SuperWeChatApplication.getInstance().getMap().remove(name);
+						FuliCenterApplication.getInstance().getMap().remove(name);
 						sendStickyBroadcast(new Intent("update_contact_list"));
 						Utils.showToast(mContext, R.string.Delete_successfully, Toast.LENGTH_SHORT);
 					}

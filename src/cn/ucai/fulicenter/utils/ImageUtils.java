@@ -24,7 +24,7 @@ import java.io.File;
 
 import cn.ucai.fulicenter.I;
 import cn.ucai.fulicenter.R;
-import cn.ucai.fulicenter.SuperWeChatApplication;
+import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.data.RequestManager;
 
 public class ImageUtils {
@@ -63,19 +63,24 @@ public class ImageUtils {
 	}
 
 	public static void setNewGoodthumb(String goodsThumb, NetworkImageView mNetiv_photo) {
-		String path = SuperWeChatApplication.SERVER_ROOT + "?" + "request=" + I.REQUEST_DOWNLOAD_NEW_GOOD
+		String path = FuliCenterApplication.SERVER_ROOT + "?" + "request=" + I.REQUEST_DOWNLOAD_NEW_GOOD
 				+ "&" + I.FILE_NAME + "=" + goodsThumb;
 		setThumb(path,mNetiv_photo);
 	}
 
+	public static void setBoutique(String goodsThumb, NetworkImageView imageView) {
+		String path = FuliCenterApplication.SERVER_ROOT + "?" + "request=" + I.REQUEST_DOWNLOAD_BOUTIQUE_IMG
+				+ "&" + I.Boutique.IMAGE_URL + "=" + goodsThumb;
+		setThumb(path,imageView);
+	}
 	public static void setGoodDetailThumb(String colorImg, NetworkImageView imageView) {
-		String url = SuperWeChatApplication.SERVER_ROOT
+		String url = FuliCenterApplication.SERVER_ROOT
 				+ "?" + I.KEY_REQUEST + "=" + I.REQUEST_DOWNLOAD_COLOR_IMG
 				+ "&" + I.Color.COLOR_IMG + "=" + colorImg;
 		setThumb(url, imageView);
 	}
 
-	private static void setThumb(String url, NetworkImageView imageView) {
+	public static void setThumb(String url, NetworkImageView imageView) {
 		imageView.setImageUrl(url, RequestManager.getImageLoader());
 		imageView.setDefaultImageResId(R.drawable.nopic);
 		imageView.setErrorImageResId(R.drawable.nopic);
