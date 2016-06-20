@@ -48,10 +48,10 @@ public class Good_DetailActivity extends BaseActivity {
     }
 
     private void initData() {
-        int goodsid = getIntent().getIntExtra(D.NewGood.KEY_GOODS_ID, 0);
+        int GoodsId = getIntent().getIntExtra(D.NewGood.KEY_GOODS_ID, 0);
         try {
             String path = new ApiParams()
-                    .with(D.NewGood.KEY_GOODS_ID, goodsid + "")
+                    .with(D.NewGood.KEY_GOODS_ID, GoodsId + "")
                     .getRequestUrl(I.REQUEST_FIND_GOOD_DETAILS);
             executeRequest(new GsonRequest<GoodDetailsBean>(path,GoodDetailsBean.class,
                     responseGoodDetailsListener(),errorListener()));

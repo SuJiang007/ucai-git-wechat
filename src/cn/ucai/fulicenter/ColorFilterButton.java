@@ -20,9 +20,7 @@ import com.android.volley.Response;
 
 import java.util.ArrayList;
 
-import cn.ucai.fulicenter.I;
-import cn.ucai.fulicenter.R;
-import cn.ucai.fulicenter.activity.CategoryChildActivity;
+import cn.ucai.fulicenter.activity.Category_DetaiActivity;
 import cn.ucai.fulicenter.bean.CategoryChildBean;
 import cn.ucai.fulicenter.bean.ColorBean;
 import cn.ucai.fulicenter.bean.GoodDetailsBean;
@@ -37,7 +35,7 @@ import cn.ucai.fulicenter.utils.Utils;
  * @author yao
  */
 public class ColorFilterButton extends Button {
-    CategoryChildActivity mContext;
+    Category_DetaiActivity mContext;
     ColorFilterButton mbtnTop;
     PopupWindow mPopupWindow;
     GridView mgvColor;
@@ -47,7 +45,7 @@ public class ColorFilterButton extends Button {
     
     public ColorFilterButton(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mContext= (CategoryChildActivity) context;
+        mContext= (Category_DetaiActivity) context;
         mbtnTop=this;
         initGridView();
     }
@@ -162,7 +160,7 @@ public class ColorFilterButton extends Button {
                             good.setShopPrice(goodDetails.getShopPrice());
                             goodList.add(good);
                         }
-                        Intent intent=new Intent(mContext, CategoryChildActivity.class);
+                        Intent intent=new Intent(mContext, Category_DetaiActivity.class);
                         intent.putExtra(I.CategoryGroup.NAME, mGroupName);
                         intent.putExtra(I.CategoryChild.CAT_ID, catId);
                         intent.putExtra("childList", mChildList);

@@ -20,9 +20,7 @@ import com.android.volley.toolbox.NetworkImageView;
 
 import java.util.ArrayList;
 
-import cn.ucai.fulicenter.I;
-import cn.ucai.fulicenter.R;
-import cn.ucai.fulicenter.activity.CategoryChildActivity;
+import cn.ucai.fulicenter.activity.Category_DetaiActivity;
 import cn.ucai.fulicenter.bean.CategoryChildBean;
 import cn.ucai.fulicenter.data.RequestManager;
 import cn.ucai.fulicenter.utils.ImageUtils;
@@ -157,12 +155,12 @@ public class CatChildFilterButton extends Button {
                     if(mPopupWindow.isShowing()){
                         mPopupWindow.dismiss();
                     }
-                    Intent intent=new Intent(mContext, CategoryChildActivity.class);
+                    Intent intent=new Intent(mContext, Category_DetaiActivity.class);
                     intent.putExtra(I.CategoryChild.CAT_ID, child.getId());
                     intent.putExtra("childList", Children);
                     intent.putExtra(I.CategoryGroup.NAME, mbtnTop.getText().toString());
                     mContext.startActivity(intent);
-                    ((CategoryChildActivity)mContext).finish();
+                    ((Category_DetaiActivity)mContext).finish();
                 }
             });
             return layout;

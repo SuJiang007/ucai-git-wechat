@@ -158,7 +158,7 @@ public class Boutique_DetailActivity extends BaseActivity {
         miv_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(Boutique_DetailActivity.this,FuliCenterMainActivity.class));
+                finish();
             }
         });
     }

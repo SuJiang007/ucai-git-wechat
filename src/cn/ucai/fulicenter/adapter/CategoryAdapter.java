@@ -2,6 +2,7 @@ package cn.ucai.fulicenter.adapter;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 
 import cn.ucai.fulicenter.I;
 import cn.ucai.fulicenter.R;
+import cn.ucai.fulicenter.activity.Category_DetaiActivity;
 import cn.ucai.fulicenter.bean.CategoryChildBean;
 import cn.ucai.fulicenter.bean.CategoryGroupBean;
 import cn.ucai.fulicenter.utils.ImageUtils;
@@ -98,7 +100,7 @@ public class CategoryAdapter extends BaseExpandableListAdapter {
     }
 
     @Override
-    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+    public View getChildView(final int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         CategoryChildViewHolder holder = null;
         position = childPosition;
         if (convertView == null) {
@@ -111,7 +113,7 @@ public class CategoryAdapter extends BaseExpandableListAdapter {
         } else {
             holder = (CategoryChildViewHolder) convertView.getTag();
         }
-        CategoryChildBean child = getChild(groupPosition, childPosition);
+        final CategoryChildBean child = getChild(groupPosition, childPosition);
         holder.category_child_name.setText(child.getName());
         String imageUrl = child.getImageUrl();
         String url = I.DOWNLOAD_DOWNLOAD_CATEGORY_CHILD_IMAGE_URL + imageUrl;
@@ -119,7 +121,10 @@ public class CategoryAdapter extends BaseExpandableListAdapter {
         holder.category_child_rl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                context.startActivity(new Intent(context, Category_DetaiActivity.class)
+                        .putExtra("childList", ChilidList.get(groupPosition))
+                        .putExtra(I.CategoryGroup.NAME,getGroup(groupPosition).getName())
+                        .putExtra(I.CategoryChild.CAT_ID,child.getId()));
             }
         });
         return convertView;
@@ -130,14 +135,12 @@ public class CategoryAdapter extends BaseExpandableListAdapter {
         return true;
     }
 
-    public void addGroupList(ArrayList<CategoryGroupBean> arrayList) {
+    public void addListItem(ArrayList<CategoryGroupBean> arrayList,ArrayList<ArrayList<CategoryChildBean>> arrayList1) {
         this.GroupList.addAll(arrayList);
+        this.ChilidList.addAll(arrayList1);
         notifyDataSetChanged();
     }
-    public void addChildList(ArrayList<CategoryChildBean> arrayList,int groupposition) {
-        this.ChilidList.get(groupposition).addAll(arrayList);
-        notifyDataSetChanged();
-    }
+
 
     class CategoryGroupViewHolder {
         NetworkImageView category_group_photo;

@@ -4,6 +4,7 @@ package cn.ucai.fulicenter.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +36,7 @@ public class CategoryFragment extends Fragment {
     FuliCenterMainActivity mContext;
     View layout;
     ArrayList<CategoryGroupBean> arrayList;
+    int groupCount = 0;
 
     public CategoryFragment() {
         // Required empty public constructor
@@ -59,8 +61,8 @@ public class CategoryFragment extends Fragment {
 
     private void initData() {
         String path = "http://10.0.2.2:9999/FuLiCenterServer/Server?request=find_category_group";
-        mContext.executeRequest(new GsonRequest<CategoryGroupBean[]>(path,CategoryGroupBean[].class,
-                responseCategoryGroupListener(),mContext.errorListener()));
+        mContext.executeRequest(new GsonRequest<CategoryGroupBean[]>(path, CategoryGroupBean[].class,
+                responseCategoryGroupListener(), mContext.errorListener()));
     }
 
     private Response.Listener<CategoryGroupBean[]> responseCategoryGroupListener() {
@@ -68,22 +70,24 @@ public class CategoryFragment extends Fragment {
             @Override
             public void onResponse(CategoryGroupBean[] categoryGroupBeen) {
                 if (categoryGroupBeen != null) {
-                    ArrayList<CategoryGroupBean> list = Utils.array2List(categoryGroupBeen);
-                    arrayList = list;
-                    mAdapter.addGroupList(list);
-
-                    int id = categoryGroupBeen[0].getId();
-                    int page_id = 0;
-                    try {
-                        String url = new ApiParams()
-                                .with(I.CategoryChild.PARENT_ID, id + "")
-                                .with(I.PAGE_ID, page_id + "")
-                                .with(I.PAGE_SIZE, I.PAGE_SIZE_DEFAULT + "")
-                                .getRequestUrl(I.REQUEST_FIND_CATEGORY_CHILDREN);
-                        mContext.executeRequest(new GsonRequest<CategoryChildBean[]>(url,CategoryChildBean[].class,
-                                responseCategoryChildListener(),mContext.errorListener()));
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    GroupList = Utils.array2List(categoryGroupBeen);
+                    int i = 0;
+                    for (CategoryGroupBean group : categoryGroupBeen) {
+                        int id = categoryGroupBeen[i].getId();
+                        ChildList.add(i,new ArrayList<CategoryChildBean>());
+                        int page_id = 0;
+                        try {
+                            String url = new ApiParams()
+                                    .with(I.CategoryChild.PARENT_ID, id + "")
+                                    .with(I.PAGE_ID, page_id + "")
+                                    .with(I.PAGE_SIZE, I.PAGE_SIZE_DEFAULT + "")
+                                    .getRequestUrl(I.REQUEST_FIND_CATEGORY_CHILDREN);
+                            mContext.executeRequest(new GsonRequest<CategoryChildBean[]>(url, CategoryChildBean[].class,
+                                    responseCategoryChildListener(i), mContext.errorListener()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        i++;
                     }
 
                 }
@@ -91,13 +95,20 @@ public class CategoryFragment extends Fragment {
         };
     }
 
-    private Response.Listener<CategoryChildBean[]> responseCategoryChildListener() {
+    private Response.Listener<CategoryChildBean[]> responseCategoryChildListener(final int i) {
         return new Response.Listener<CategoryChildBean[]>() {
             @Override
             public void onResponse(CategoryChildBean[] categoryChildBeen) {
+                groupCount++;
                 if (categoryChildBeen != null) {
-                    ArrayList<CategoryChildBean> lis = Utils.array2List(categoryChildBeen);
-                    mAdapter.addChildList(lis,categoryChildBeen[0].getParentId());
+                    ArrayList<CategoryChildBean> childlist
+                            = Utils.array2List(categoryChildBeen);
+                    if (childlist != null) {
+                        ChildList.set(i, childlist);
+                    }
+                }
+                if (GroupList.size() == groupCount) {
+                    mAdapter.addListItem(GroupList,ChildList);
                 }
             }
         };

@@ -40,6 +40,7 @@ public class FuliCenterApplication extends Application {
 	 */
 	public static String currentUserNick = "";
 	public static DemoHXSDKHelper hxSDKHelper = new DemoHXSDKHelper();
+	private int CollectCount = 0;
 
 	@Override
 	public void onCreate() {
@@ -153,4 +154,11 @@ public class FuliCenterApplication extends Application {
 		this.map = map;
 	}
 
+	public int getCollectCount() {
+		return CollectCount;
+	}
+
+	public void setCollectCount(int collectCount) {
+		CollectCount = collectCount;
+	}
 }

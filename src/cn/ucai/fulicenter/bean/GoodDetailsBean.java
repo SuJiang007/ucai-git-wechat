@@ -46,7 +46,7 @@ public class GoodDetailsBean implements Serializable{
     private long addTime;
     private String shareUrl;
     @JsonProperty("isPromote")
-    private boolean isPromote;
+    public boolean isPromote;
     /**
      * id : 9529
      * goodsId : 0
@@ -173,7 +173,7 @@ public class GoodDetailsBean implements Serializable{
     }
 
     @JsonIgnore
-    public boolean isIsPromote() {
+    public boolean isPromote() {
         return isPromote;
     }
 

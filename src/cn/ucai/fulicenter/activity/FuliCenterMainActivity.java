@@ -62,7 +62,7 @@ public class FuliCenterMainActivity extends BaseActivity{
     }
 
     /**
-     * TextView点击事件
+     * Button
      *
      * @param view
      */
