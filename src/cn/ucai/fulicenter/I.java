@@ -431,7 +431,7 @@ public interface I {
     /**
      * 下载用户头像的请求
      */
-    String REQUEST_DOWNLOAD_AVATAR_USER = FuliCenterApplication.ROOT_SERVER + "?" + KEY_REQUEST + "="
+    String REQUEST_DOWNLOAD_AVATAR_USER = FuliCenterApplication.SERVER_ROOT + "?" + KEY_REQUEST + "="
             + REQUEST_DOWNLOAD_AVATAR + "&" + AVATAR_TYPE + "=";
 
     /**

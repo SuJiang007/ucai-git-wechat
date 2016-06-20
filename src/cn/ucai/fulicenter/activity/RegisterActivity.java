@@ -152,7 +152,7 @@ public class RegisterActivity extends BaseActivity {
 		//如果环信服务器注册失败，删除服务器上面的账号和头像
 		File file = new File(ImageUtils.getAvatarpath(RegisterActivity.this, I.AVATAR_TYPE_USER_PATH), mAvatar + I.AVATAR_SUFFIX_JPG);
 		final OkHttpUtils<Message> utils = new OkHttpUtils<>();
-		utils.url(FuliCenterApplication.ROOT_SERVER)
+		utils.url(FuliCenterApplication.SERVER_ROOT)
 				.addParam(I.KEY_REQUEST,I.REQUEST_REGISTER)
 				.addParam(I.User.USER_NAME,username)
 				.addParam(I.User.NICK,nick)

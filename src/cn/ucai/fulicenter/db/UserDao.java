@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import cn.ucai.fulicenter.I;
 import cn.ucai.fulicenter.bean.User;
@@ -72,6 +73,7 @@ public class UserDao extends SQLiteOpenHelper {
             String nick = cursor.getString(cursor.getColumnIndex(I.User.NICK));
             String password = cursor.getString(cursor.getColumnIndex(I.User.PASSWORD));
             int unmessage = cursor.getInt(cursor.getColumnIndex(I.User.UN_READ_MSG_COUNT));
+            Log.i("main", "id=" + nick);
             return new User(id, username, password, nick, unmessage);
         }
         cursor.close();

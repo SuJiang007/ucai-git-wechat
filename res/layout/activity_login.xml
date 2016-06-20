@@ -16,6 +16,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="10dp"
+            android:id="@+id/iv_back"
             android:src="@drawable/back_press" />
 
         <TextView

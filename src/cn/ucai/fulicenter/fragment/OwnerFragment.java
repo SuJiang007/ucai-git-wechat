@@ -7,11 +7,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
@@ -23,6 +25,7 @@ import java.util.Objects;
 
 import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.R;
+import cn.ucai.fulicenter.activity.SettingActivity;
 import cn.ucai.fulicenter.bean.User;
 import cn.ucai.fulicenter.task.DownloadCollectCountTask;
 import cn.ucai.fulicenter.utils.UserUtils;
@@ -40,8 +43,9 @@ public class OwnerFragment extends Fragment {
     Context mContext;
     int collectCount;
     ImageView miv_message;
-
+    MyClickListener listener;
     User user;
+    RelativeLayout rl_owner;
 
     public OwnerFragment() {
         // Required empty public constructor
@@ -54,24 +58,46 @@ public class OwnerFragment extends Fragment {
         // Inflate the layout for this fragment
         mContext = getActivity();
         View layout = inflater.inflate(R.layout.fragment_owner, container, false);
-        updateCollectChanged();
-        updateUserChanged();
         initView(layout);
         initDate();
+        setListener();
         return layout;
     }
+
+    private void setListener() {
+        updateCollectChanged();
+        updateUserChanged();
+        listener = new MyClickListener();
+        mtv_Setting.setOnClickListener(listener);
+        rl_owner.setOnClickListener(listener);
+    }
+
+    class MyClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.owner_set:
+                case R.id.rl_own:
+                    startActivity(new Intent(mContext, SettingActivity.class));
+                    break;
+            }
+        }
+    }
+
 
     private void initDate() {
         collectCount = FuliCenterApplication.getInstance().getCollectCount();
         mtv_collect_count.setText(""+collectCount);
         user = FuliCenterApplication.getInstance().getUser();
+        Log.i("main", "user=" + user);
         if (user != null) {
             UserUtils.setCurrentUserAvatar(userAvatar);
-            UserUtils.setCurrentUserNick(mtv_name);
+            UserUtils.setCurrentUserBeanNick(mtv_name);
         }
     }
 
     private void initView(View layout) {
+        rl_owner = (RelativeLayout) layout.findViewById(R.id.rl_own);
         userAvatar = (NetworkImageView) layout.findViewById(R.id.owner_photo);
         mtv_name = (TextView) layout.findViewById(R.id.owner_name);
         mtv_collect_count = (TextView) layout.findViewById(R.id.owner_collect_count);
@@ -126,7 +152,7 @@ public class OwnerFragment extends Fragment {
     class UpdateUserChangedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            new DownloadCollectCountTask(user.getMUserName(), mContext).execute();
+            new DownloadCollectCountTask(mContext).execute();
             initDate();
         }
     }

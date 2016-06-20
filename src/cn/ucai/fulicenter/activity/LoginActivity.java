@@ -13,20 +13,12 @@
  */
 package cn.ucai.fulicenter.activity;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.Message;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -38,19 +30,24 @@ import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.easemob.EMCallBack;
-
-import cn.ucai.fulicenter.I;
-import cn.ucai.fulicenter.applib.controller.HXSDKHelper;
-
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMGroupManager;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import cn.ucai.fulicenter.Constant;
-import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.DemoHXSDKHelper;
+import cn.ucai.fulicenter.FuliCenterApplication;
+import cn.ucai.fulicenter.I;
 import cn.ucai.fulicenter.R;
+import cn.ucai.fulicenter.applib.controller.HXSDKHelper;
 import cn.ucai.fulicenter.bean.User;
 import cn.ucai.fulicenter.data.ApiParams;
 import cn.ucai.fulicenter.data.GsonRequest;
@@ -71,6 +68,7 @@ import cn.ucai.fulicenter.utils.Utils;
 public class LoginActivity extends BaseActivity {
     private static final String TAG = "LoginActivity";
     public static final int REQUEST_CODE_SETNICK = 1;
+    public static final int RESULT_CODE_PERSON = 101;
     private EditText usernameEditText;
     private EditText passwordEditText;
 
@@ -79,8 +77,8 @@ public class LoginActivity extends BaseActivity {
 
     private String currentUsername;
     private String currentPassword;
+
     ProgressDialog pd;
-    Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,29 +87,48 @@ public class LoginActivity extends BaseActivity {
         // 如果用户名密码都有，直接进入主页面
         if (DemoHXSDKHelper.getInstance().isLogined()) {
             autoLogin = true;
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            return;
+			startActivity(new Intent(LoginActivity.this, FuliCenterMainActivity.class));
+            finish();
         }
         setContentView(R.layout.activity_login);
-        mContext = this;
+
         usernameEditText = (EditText) findViewById(R.id.username);
         passwordEditText = (EditText) findViewById(R.id.password);
 
-
-        if (FuliCenterApplication.getInstance().getUserName() != null) {
-            usernameEditText.setText(FuliCenterApplication.getInstance().getUserName());
-        }
         setListener();
+
+        pd = new ProgressDialog(LoginActivity.this);
+        pd.setMessage(getString(R.string.Is_landing));
+        progressShow = true;
+        pd.setCanceledOnTouchOutside(false);
+        pd.setOnCancelListener(new OnCancelListener() {
+
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                progressShow = false;
+            }
+        });
     }
 
+    /** 设置监听器 */
     private void setListener() {
-        setOnRegisterListener();
         setOnLoginListener();
+        setOnRegisterListener();
         setOnUserNameChangedListener();
+        setBackListener();
     }
 
+    private void setBackListener() {
+        findViewById(R.id.iv_back).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
+    }
+
+    /** 设置账号文本框监听器，如果用户名改变，清空密码 */
     private void setOnUserNameChangedListener() {
-        // 如果用户名改变，清空密码
         usernameEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -128,132 +145,186 @@ public class LoginActivity extends BaseActivity {
 
             }
         });
+        if (FuliCenterApplication.getInstance().getUserName() != null) {
+            usernameEditText.setText(FuliCenterApplication.getInstance().getUserName());
+        }
     }
 
-    /**
-     * 登录
-     *
-     */
+    /** 设置注册按钮监听器 */
+    private void setOnRegisterListener() {
+        findViewById(R.id.btnRegister).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                register();
+            }
+        });
+    }
+
+    /** 设置登录按钮监听器 */
     private void setOnLoginListener() {
         findViewById(R.id.btnLogin).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                if (!CommonUtils.isNetWorkConnected(LoginActivity.this)) {
-                    Toast.makeText(mContext, R.string.network_isnot_available, Toast.LENGTH_SHORT).show();
+            public void onClick(View view) {
+                login();
+            }
+        });
+    }
+
+    /** 登录 */
+    private void login() {
+        if (!CommonUtils.isNetWorkConnected(this)) {
+            Toast.makeText(this, R.string.network_isnot_available, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        currentUsername = usernameEditText.getText().toString().trim();
+        currentPassword = passwordEditText.getText().toString().trim();
+
+        if (TextUtils.isEmpty(currentUsername)) {
+            Toast.makeText(this, R.string.User_name_cannot_be_empty, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (TextUtils.isEmpty(currentPassword)) {
+            Toast.makeText(this, R.string.Password_cannot_be_empty, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        showProgressDialog();
+
+        final long start = System.currentTimeMillis();
+        // 调用sdk登陆方法登陆聊天服务器
+        EMChatManager.getInstance().login(currentUsername, currentPassword, new EMCallBack() {
+
+            @Override
+            public void onSuccess() {
+                Log.i("my", TAG + " onSuccess");
+                if (!progressShow) {
                     return;
                 }
-                currentUsername = usernameEditText.getText().toString().trim();
-                currentPassword = passwordEditText.getText().toString().trim();
+                loginClientServer();
+            }
 
-                if (TextUtils.isEmpty(currentUsername)) {
-                    Toast.makeText(mContext, R.string.User_name_cannot_be_empty, Toast.LENGTH_SHORT).show();
+            @Override
+            public void onProgress(int progress, String status) {
+                Log.i("my", TAG + " onProgress");
+            }
+
+            @Override
+            public void onError(final int code, final String message) {
+                Log.i("my", TAG + " onError");
+                if (!progressShow) {
                     return;
                 }
-                if (TextUtils.isEmpty(currentPassword)) {
-                    Toast.makeText(mContext, R.string.Password_cannot_be_empty, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                showProgressDialog();
-                final long start = System.currentTimeMillis();
-                // 调用sdk登陆方法登陆聊天服务器
-                EMChatManager.getInstance().login(currentUsername, currentPassword, new EMCallBack() {
-
-                    @Override
-                    public void onSuccess() {
-                        if (!progressShow) {
-                            return;
-                        }
-                        loginAppServer();
-                    }
-
-                    @Override
-                    public void onProgress(int progress, String status) {
-                    }
-
-                    @Override
-                    public void onError(final int code, final String message) {
-                        if (!progressShow) {
-                            return;
-                        }
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                pd.dismiss();
-                                Toast.makeText(getApplicationContext(), getString(R.string.Login_failed) + message,
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        pd.dismiss();
+                        Toast.makeText(getApplicationContext(), getString(R.string.Login_failed) + message,
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
             }
         });
     }
 
-    private void loginAppServer() {
-        UserDao dao = new UserDao(mContext);
-        User user = dao.findUser(currentUsername);
-        if (user != null) {
+    /** 登录到客户端 */
+    private void loginClientServer() {
+        UserDao userDao = new UserDao(this);
+        User user = userDao.findUser(currentUsername);
+        Log.i(TAG, String.valueOf(user == null));
+        if (user != null) { //本地是否保存该账号
             if (user.getMUserPassword().equals(MD5.getData(currentPassword))) {
                 loginSuccess();
             } else {
+                Looper.prepare();
+                Toast.makeText(getApplicationContext(), R.string.login_failure_failed, Toast.LENGTH_SHORT).show();
+                Looper.loop();
                 pd.dismiss();
-                Toast.makeText(mContext,R.string.login_failure_failed, Toast.LENGTH_SHORT).show();
             }
-        } else {
+        } else { //在远程登录
             try {
                 String path = new ApiParams()
                         .with(I.User.USER_NAME, currentUsername)
                         .with(I.User.PASSWORD, currentPassword)
                         .getRequestUrl(I.REQUEST_LOGIN);
-                executeRequest(new GsonRequest<User>(path, User.class, responseListener(dao), errorListener()));
+                executeRequest(new GsonRequest<User>(path, User.class, responseListener(), errorListener()));
+                Log.i("my", TAG + " " + path);
             } catch (Exception e) {
                 e.printStackTrace();
-                pd.dismiss();
             }
         }
     }
 
-    private Response.Listener<User> responseListener(final UserDao dao) {
+    /** 设置登录成功监听 */
+    private Response.Listener<User> responseListener() {
         return new Response.Listener<User>() {
-                    @Override
-                    public void onResponse(User user) {
-                        if (user.isResult()) {
-                            saveUser(user);
-                            loginSuccess();
-                            dao.addUser(user);
-                        } else {
-                            Utils.showToast(mContext, Utils.getResourceString(mContext, user.getMsg()), Toast.LENGTH_SHORT);
-                            pd.dismiss();
-                        }
-                    }
-                };
+            @Override
+            public void onResponse(User user) {
+                if (user.isResult()) {
+                    Log.i("my", TAG + " isResult");
+                    saveUser(user);
+                    loginSuccess();
+                    new UserDao(LoginActivity.this).addUser(user);
+                } else {
+                    Utils.showToast(LoginActivity.this, Utils.getResourceString(LoginActivity.this, user.getMsg()), Toast.LENGTH_SHORT);
+                    pd.dismiss();
+                }
+            }
+        };
     }
 
+    /** 保存用户信息 */
     private void saveUser(User user) {
-        FuliCenterApplication instance = FuliCenterApplication.getInstance();
-        // 登陆成功，保存用户名密码
-        instance.setUser(user);
-        instance.setUserName(currentUsername);
-        instance.setPassword(currentPassword);
+        FuliCenterApplication intance = FuliCenterApplication.getInstance();
+        intance.setUser(user);
+        intance.setUserName(currentUsername);
+        intance.setPassword(currentPassword);
         FuliCenterApplication.currentUserNick = user.getMUserNick();
     }
 
-    private void loginSuccess() {
+    /** 显示进度对话框 */
+    private void showProgressDialog() {
+        pd.show();
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        pd.dismiss();
+    }
+
+    /** 登录成功后操作 */
+    private void loginSuccess() {
         try {
             // ** 第一次登录或者之前logout后再登录，加载所有本地群和回话
             // ** manually load all local groups and
             EMGroupManager.getInstance().loadAllGroups();
             EMChatManager.getInstance().loadAllConversations();
+            //下载用户头像
+            final OkHttpUtils<Message> utils = new OkHttpUtils<Message>();
+            utils.url(FuliCenterApplication.SERVER_ROOT)
+                    .addParam(I.KEY_REQUEST,I.REQUEST_DOWNLOAD_AVATAR)
+                    .addParam(I.AVATAR_TYPE,currentUsername)
+                    .doInBackground(new Callback() {
+                        @Override
+                        public void onFailure(Request request, IOException e) {
+                            Toast.makeText(LoginActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onResponse(com.squareup.okhttp.Response response) throws IOException {
+                            String path = I.AVATAR_TYPE_USER_PATH + I.BACKSLASH + currentUsername + I.AVATAR_SUFFIX_JPG;
+                            File file = OnSetAvatarListener.getAvatarFile(LoginActivity.this, path);
+                            utils.downloadFile(response, file, false);
+                        }
+                    })
+                    .execute(null);
             // 处理好友和群组
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    new DownloadContactListTask(currentUsername, mContext).execute();
+                    new DownloadContactListTask(currentUsername,LoginActivity.this).execute();
                 }
             });
             initializeContacts();
-            //下载用户头像
-            save2SD();
         } catch (Exception e) {
             e.printStackTrace();
             // 取好友或者群聊失败，不让进入主页面
@@ -270,57 +341,19 @@ public class LoginActivity extends BaseActivity {
         boolean updatenick = EMChatManager.getInstance().updateCurrentUserNick(
                 FuliCenterApplication.currentUserNick.trim());
         if (!updatenick) {
-            Log.e("LoginActivity", "update current user nick fail");
         }
         if (!LoginActivity.this.isFinishing() && pd.isShowing()) {
             pd.dismiss();
         }
-        if (pd != null) {
-            pd.dismiss();
-        }
         // 进入主页面
-        Intent intent = new Intent(LoginActivity.this,
-                MainActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    private void save2SD() {
-        final OkHttpUtils<Message> utils = new OkHttpUtils<Message>();
-        utils.url(FuliCenterApplication.ROOT_SERVER)
-                .addParam(I.KEY_REQUEST, I.REQUEST_DOWNLOAD_AVATAR)
-                .addParam(I.AVATAR_TYPE, currentUsername)
-                .doInBackground(new Callback() {
-                    @Override
-                    public void onFailure(Request request, IOException e) {
-
-                    }
-
-                    @Override
-                    public void onResponse(com.squareup.okhttp.Response response) throws IOException {
-                        String avatarPath = I.AVATAR_TYPE_USER_PATH + I.BACKSLASH
-                                + currentUsername + I.AVATAR_SUFFIX_JPG;
-                        File file = OnSetAvatarListener.getAvatarFile(LoginActivity.this, avatarPath);
-                        FileOutputStream out = null;
-                        out = new FileOutputStream(file);
-                        utils.downloadFile(response, file, false);
-                    }
-                }).execute(null);
-    }
-
-    private void showProgressDialog() {
-        progressShow = true;
-        pd = new ProgressDialog(LoginActivity.this);
-        pd.setCanceledOnTouchOutside(false);
-        pd.setOnCancelListener(new OnCancelListener() {
-
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                progressShow = false;
-            }
-        });
-        pd.setMessage(getString(R.string.Is_landing));
-        pd.show();
+        String action = getIntent().getStringExtra("action");
+        if (action != null) {
+            sendStickyBroadcast(new Intent("update_user"));
+            Intent intent = new Intent(LoginActivity.this,
+                    FuliCenterMainActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 
     private void initializeContacts() {
@@ -349,17 +382,9 @@ public class LoginActivity extends BaseActivity {
         dao.saveContactList(users);
     }
 
-    /**
-     * 注册
-     *
-     */
-    public void setOnRegisterListener() {
-        findViewById(R.id.btnRegister).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(LoginActivity.this, RegisterActivity.class), 0);
-            }
-        });
+    /** 注册 */
+    private void register() {
+        startActivityForResult(new Intent(this, RegisterActivity.class), 0);
     }
 
     @Override
@@ -367,14 +392,6 @@ public class LoginActivity extends BaseActivity {
         super.onResume();
         if (autoLogin) {
             return;
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (pd != null) {
-            pd.dismiss();
         }
     }
 }

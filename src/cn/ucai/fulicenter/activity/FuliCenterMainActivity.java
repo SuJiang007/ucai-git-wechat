@@ -1,11 +1,16 @@
 package cn.ucai.fulicenter.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.View;
 import android.widget.RadioButton;
 
+import com.easemob.chat.EMChat;
+
+import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.R;
 import cn.ucai.fulicenter.fragment.BoutiqueFragment;
 import cn.ucai.fulicenter.fragment.CarFragment;
@@ -41,7 +46,7 @@ public class FuliCenterMainActivity extends BaseActivity{
                 .add(R.id.fl, boutiqueFragment).hide(boutiqueFragment)
                 .add(R.id.fl, categoryFragment).hide(categoryFragment)
                 .add(R.id.fl, carFragment).hide(carFragment)
-                .add(R.id.fl, ownerFragment).hide(ownerFragment)
+//                .add(R.id.fl, ownerFragment).hide(ownerFragment)
                 .show(newGoodsFragment)
                 .commit();
     }
@@ -67,12 +72,9 @@ public class FuliCenterMainActivity extends BaseActivity{
      * @param view
      */
     public void onCheckedChange(View view) {
-//        FragmentManager man = getSupportFragmentManager();
-//        FragmentTransaction ft = man.beginTransaction();
         switch (view.getId()) {
             case R.id.newGoods:
                 index = 0;
-//                ft.replace(R.id.fl, new NewGoodsFragment()).commit();
                 break;
             case R.id.Boutique:
                 index = 1;
@@ -84,8 +86,58 @@ public class FuliCenterMainActivity extends BaseActivity{
                 index = 3;
                 break;
             case R.id.me:
-                index = 4;
+                if (FuliCenterApplication.getInstance().getUser() == null) {
+                    startActivity(new Intent(this, LoginActivity.class)
+                    .putExtra("action","person"));
+                } else {
+                    index = 4;
+                }
                 break;
+        }
+        if (currentTabIndex != index) {
+            FragmentTransaction trx = getSupportFragmentManager().beginTransaction();
+            trx.hide(fragments[currentTabIndex]);
+            if (!fragments[index].isAdded()) {
+                trx.add(R.id.fl, fragments[index]);
+            }
+            trx.show(fragments[index]).commit();
+            Radio[currentTabIndex].setChecked(false);
+            // 把当前tab设为选中状态
+            Radio[index].setChecked(true);
+            currentTabIndex = index;
+        }
+    }
+
+    private void setRadioChecked(int index) {
+        for (int i=0;i<Radio.length;i++) {
+            if (i == index) {
+                Radio[i].setChecked(true);
+            } else {
+                Radio[i].setChecked(false);
+            }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String action = getIntent().getStringExtra("action");
+        Log.i("main", "action1=" + action);
+        if (action != null && FuliCenterApplication.getInstance().getUser() != null) {
+            if (action.equals("person")) {
+                index = 4;
+            }
+        } else {
+            setRadioChecked(index);
+        }
+        if (currentTabIndex == 4 && FuliCenterApplication.getInstance().getUser() != null) {
+            index = 0;
         }
         if (currentTabIndex != index) {
             FragmentTransaction trx = getSupportFragmentManager().beginTransaction();

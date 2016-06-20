@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="@string/title_user_profile"
-            android:textColor="#fff"
+            android:textColor="#000"
             android:textSize="18sp" />
     </RelativeLayout>
     <LinearLayout 

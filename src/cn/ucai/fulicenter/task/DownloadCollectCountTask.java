@@ -22,20 +22,20 @@ import cn.ucai.fulicenter.utils.Utils;
  */
 public class DownloadCollectCountTask extends BaseActivity{
     public static final String TAG = "DownloadCollectCountTask";
-    String username;
     Context context;
     String path;
+    String name;
 
-    public DownloadCollectCountTask(String username, Context context) {
-        this.username = username;
+    public DownloadCollectCountTask(Context context) {
         this.context = context;
+        this.name = FuliCenterApplication.getInstance().getUser().getMUserName();
         initPath();
     }
 
     private void initPath() {
         try {
             path = new ApiParams()
-                    .with(I.Collect.USER_NAME, username)
+                    .with(I.User.USER_NAME, name)
                     .getRequestUrl(I.REQUEST_FIND_COLLECT_COUNT);
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,8 +54,11 @@ public class DownloadCollectCountTask extends BaseActivity{
                 if (contacts != null) {
                     String msg = contacts.getMsg();
                     FuliCenterApplication.getInstance().setCollectCount(Integer.parseInt(msg));
-                    context.sendStickyBroadcast(new Intent("update_collect_count"));
+                } else {
+                    FuliCenterApplication.getInstance().setCollectCount(0);
                 }
+
+                context.sendStickyBroadcast(new Intent("update_collect_count"));
             }
         };
     }
