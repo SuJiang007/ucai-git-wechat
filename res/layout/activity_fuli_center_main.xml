@@ -57,11 +57,13 @@
                     android:drawableTop="@drawable/selector_menu_item_cart" />
 
                 <TextView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     android:background="@drawable/bg_hint"
                     android:layout_alignParentRight="true"
-                    android:text="20"
+                    android:gravity="center"
+                    android:text="0"
+                    android:id="@+id/cart_count"
                     android:visibility="visible"/>
             </RelativeLayout>
             <RadioButton

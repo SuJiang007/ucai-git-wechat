@@ -272,7 +272,8 @@
 
         <activity android:name=".activity.Good_DetailActivity" />
         <activity android:name=".activity.Boutique_DetailActivity" />
-        <activity android:name=".activity.Category_DetaiActivity"></activity>
+        <activity android:name=".activity.Category_DetaiActivity" />
+        <activity android:name=".activity.CollectActivity"></activity>
     </application>
 
 </manifest>

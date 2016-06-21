@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -19,25 +20,31 @@ import java.io.Serializable;
 
 import cn.ucai.fulicenter.D;
 import cn.ucai.fulicenter.FlowIndicator;
+import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.I;
 import cn.ucai.fulicenter.R;
 import cn.ucai.fulicenter.SlideAutoLoopView;
 import cn.ucai.fulicenter.bean.AlbumBean;
 import cn.ucai.fulicenter.bean.GoodDetailsBean;
+import cn.ucai.fulicenter.bean.MessageBean;
 import cn.ucai.fulicenter.bean.NewGoodBean;
+import cn.ucai.fulicenter.bean.User;
 import cn.ucai.fulicenter.data.ApiParams;
 import cn.ucai.fulicenter.data.GsonRequest;
+import cn.ucai.fulicenter.task.DownloadCollectCountTask;
 import cn.ucai.fulicenter.utils.ImageUtils;
 import cn.ucai.fulicenter.utils.UserUtils;
 
 public class Good_DetailActivity extends BaseActivity {
-    TextView mtv_English_Name,mtv_Chinese_Name,mtv_Price;
+    TextView mtv_English_Name, mtv_Chinese_Name, mtv_Price;
     WebView wb_Brief;
     SlideAutoLoopView mSlideAutoLoopView;
     GoodDetailsBean mGoods;
-    ImageView miv_back;
+    ImageView miv_back, miv_collect;
     FlowIndicator mFlowIndicator;
     int mCurrentColo = 0;
+    int GoodsId;
+    boolean isRight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,16 +52,90 @@ public class Good_DetailActivity extends BaseActivity {
         setContentView(R.layout.activity_good__detail);
         initView();
         initData();
+        setListener();
+    }
+
+    private void setListener() {
+        miv_collect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                User user = FuliCenterApplication.getInstance().getUser();
+                if (user == null) {
+                    startActivity(new Intent(Good_DetailActivity.this, LoginActivity.class));
+                } else {
+                    if (isRight) {
+                        try {
+                            String path = new ApiParams()
+                                    .with(I.Collect.USER_NAME, FuliCenterApplication.getInstance().getUserName())
+                                    .with(I.Collect.GOODS_ID, GoodsId + "")
+                                    .getRequestUrl(I.REQUEST_DELETE_COLLECT);
+                            executeRequest(new GsonRequest<MessageBean>(path, MessageBean.class,
+                                    responseDeleteCollectListener(), errorListener()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        try {
+                            String url = new ApiParams()
+                                    .with(I.Collect.USER_NAME, FuliCenterApplication.getInstance().getUserName())
+                                    .with(I.Collect.GOODS_ID, mGoods.getGoodsId() + "")
+                                    .with(I.Collect.GOODS_NAME, mGoods.getGoodsName())
+                                    .with(I.Collect.GOODS_ENGLISH_NAME, mGoods.getGoodsEnglishName())
+                                    .with(I.Collect.GOODS_THUMB, mGoods.getGoodsThumb())
+                                    .with(I.Collect.GOODS_IMG, mGoods.getGoodsImg())
+                                    .with(I.Collect.ADD_TIME, mGoods.getAddTime() + "")
+                                    .getRequestUrl(I.REQUEST_ADD_COLLECT);
+                            executeRequest(new GsonRequest<MessageBean>(url,MessageBean.class,
+                                    responseAddCollectListener(),errorListener()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private Response.Listener<MessageBean> responseAddCollectListener() {
+        return new Response.Listener<MessageBean>() {
+            @Override
+            public void onResponse(MessageBean messageBean) {
+                if (messageBean.isSuccess()) {
+                    new DownloadCollectCountTask(Good_DetailActivity.this).execute();
+                    isRight = true;
+                    miv_collect.setImageResource(R.drawable.bg_collect_out);
+                    Toast.makeText(Good_DetailActivity.this,messageBean.getMsg(),Toast.LENGTH_SHORT).show();
+                }else {
+                    Toast.makeText(Good_DetailActivity.this, messageBean.getMsg(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+    }
+
+    private Response.Listener<MessageBean> responseDeleteCollectListener() {
+        return new Response.Listener<MessageBean>() {
+            @Override
+            public void onResponse(MessageBean messageBean) {
+                if (messageBean.isSuccess()) {
+                    isRight = false;
+                    miv_collect.setImageResource(R.drawable.bg_collect_in);
+                    new DownloadCollectCountTask(Good_DetailActivity.this).execute();
+                    Toast.makeText(Good_DetailActivity.this, messageBean.getMsg(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(Good_DetailActivity.this, messageBean.getMsg(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
     }
 
     private void initData() {
-        int GoodsId = getIntent().getIntExtra(D.NewGood.KEY_GOODS_ID, 0);
+        GoodsId = getIntent().getIntExtra(D.NewGood.KEY_GOODS_ID, 0);
         try {
             String path = new ApiParams()
                     .with(D.NewGood.KEY_GOODS_ID, GoodsId + "")
                     .getRequestUrl(I.REQUEST_FIND_GOOD_DETAILS);
-            executeRequest(new GsonRequest<GoodDetailsBean>(path,GoodDetailsBean.class,
-                    responseGoodDetailsListener(),errorListener()));
+            executeRequest(new GsonRequest<GoodDetailsBean>(path, GoodDetailsBean.class,
+                    responseGoodDetailsListener(), errorListener()));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -69,7 +150,7 @@ public class Good_DetailActivity extends BaseActivity {
                     mtv_English_Name.setText(mGoods.getGoodsEnglishName());
                     mtv_Chinese_Name.setText(mGoods.getGoodsName());
                     mtv_Price.setText(mGoods.getCurrencyPrice());
-                    wb_Brief.loadDataWithBaseURL(null,mGoods.getGoodsBrief().trim(),D.TEXT_HTML,D.UTF_8,null);
+                    wb_Brief.loadDataWithBaseURL(null, mGoods.getGoodsBrief().trim(), D.TEXT_HTML, D.UTF_8, null);
                     miv_back.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -90,7 +171,7 @@ public class Good_DetailActivity extends BaseActivity {
     private void initColorsBanner() {
         //设置第一个颜色的图片轮播
         updateColor(0);
-        for (int i=0;i<mGoods.getProperties().length;i++) {
+        for (int i = 0; i < mGoods.getProperties().length; i++) {
             mCurrentColo = i;
             View layout = View.inflate(this, R.layout.layout_property_color, null);
             NetworkImageView ivColor = (NetworkImageView) layout.findViewById(R.id.ivColorItem);
@@ -98,7 +179,7 @@ public class Good_DetailActivity extends BaseActivity {
             if (colorImg.isEmpty()) {
                 continue;
             }
-            ImageUtils.setGoodDetailThumb(colorImg,ivColor);
+            ImageUtils.setGoodDetailThumb(colorImg, ivColor);
 
             layout.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -112,10 +193,10 @@ public class Good_DetailActivity extends BaseActivity {
     private void updateColor(int i) {
         AlbumBean[] album = mGoods.getProperties()[i].getAlbums();
         String[] albumsImgUrl = new String[album.length];
-        for (int j=0;j<albumsImgUrl.length;j++) {
+        for (int j = 0; j < albumsImgUrl.length; j++) {
             albumsImgUrl[j] = album[j].getImgUrl();
         }
-        mSlideAutoLoopView.startPlayLoop(mFlowIndicator,albumsImgUrl,albumsImgUrl.length);
+        mSlideAutoLoopView.startPlayLoop(mFlowIndicator, albumsImgUrl, albumsImgUrl.length);
     }
 
     private void initView() {
@@ -126,9 +207,43 @@ public class Good_DetailActivity extends BaseActivity {
         wb_Brief = (WebView) findViewById(R.id.wvGoodBrief);
         mSlideAutoLoopView = (SlideAutoLoopView) findViewById(R.id.salv);
         miv_back = (ImageView) findViewById(R.id.back);
+        miv_collect = (ImageView) findViewById(R.id.collect);
         WebSettings settings = wb_Brief.getSettings();
         settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
         settings.setBuiltInZoomControls(true);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initCollect();
+    }
+
+    private void initCollect() {
+        try {
+            String path = new ApiParams()
+                    .with(I.Collect.USER_NAME, FuliCenterApplication.getInstance().getUserName())
+                    .with(I.Collect.GOODS_ID, GoodsId + "")
+                    .getRequestUrl(I.REQUEST_IS_COLLECT);
+            executeRequest(new GsonRequest<MessageBean>(path, MessageBean.class,
+                    responseIsCollectListener(), errorListener()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Response.Listener<MessageBean> responseIsCollectListener() {
+        return new Response.Listener<MessageBean>() {
+            @Override
+            public void onResponse(MessageBean messageBean) {
+                if (messageBean.isSuccess()) {
+                    miv_collect.setImageResource(R.drawable.bg_collect_out);
+                    isRight = true;
+                } else {
+                    miv_collect.setImageResource(R.drawable.bg_collect_in);
+                    isRight = false;
+                }
+            }
+        };
+    }
 }

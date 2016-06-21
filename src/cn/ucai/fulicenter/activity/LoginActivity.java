@@ -56,6 +56,7 @@ import cn.ucai.fulicenter.db.EMUserDao;
 import cn.ucai.fulicenter.db.UserDao;
 import cn.ucai.fulicenter.domain.EMUser;
 import cn.ucai.fulicenter.listener.OnSetAvatarListener;
+import cn.ucai.fulicenter.task.DownloadCartCountTask;
 import cn.ucai.fulicenter.task.DownloadContactListTask;
 import cn.ucai.fulicenter.utils.CommonUtils;
 import cn.ucai.fulicenter.utils.MD5;
@@ -63,7 +64,6 @@ import cn.ucai.fulicenter.utils.Utils;
 
 /**
  * 登陆页面
- *
  */
 public class LoginActivity extends BaseActivity {
     private static final String TAG = "LoginActivity";
@@ -87,7 +87,7 @@ public class LoginActivity extends BaseActivity {
         // 如果用户名密码都有，直接进入主页面
         if (DemoHXSDKHelper.getInstance().isLogined()) {
             autoLogin = true;
-			startActivity(new Intent(LoginActivity.this, FuliCenterMainActivity.class));
+            startActivity(new Intent(LoginActivity.this, FuliCenterMainActivity.class));
             finish();
         }
         setContentView(R.layout.activity_login);
@@ -110,7 +110,9 @@ public class LoginActivity extends BaseActivity {
         });
     }
 
-    /** 设置监听器 */
+    /**
+     * 设置监听器
+     */
     private void setListener() {
         setOnLoginListener();
         setOnRegisterListener();
@@ -122,12 +124,14 @@ public class LoginActivity extends BaseActivity {
         findViewById(R.id.iv_back).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
+                startActivity(new Intent(LoginActivity.this, FuliCenterMainActivity.class).putExtra("login", "per"));
             }
         });
     }
 
-    /** 设置账号文本框监听器，如果用户名改变，清空密码 */
+    /**
+     * 设置账号文本框监听器，如果用户名改变，清空密码
+     */
     private void setOnUserNameChangedListener() {
         usernameEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -150,7 +154,9 @@ public class LoginActivity extends BaseActivity {
         }
     }
 
-    /** 设置注册按钮监听器 */
+    /**
+     * 设置注册按钮监听器
+     */
     private void setOnRegisterListener() {
         findViewById(R.id.btnRegister).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -160,7 +166,9 @@ public class LoginActivity extends BaseActivity {
         });
     }
 
-    /** 设置登录按钮监听器 */
+    /**
+     * 设置登录按钮监听器
+     */
     private void setOnLoginListener() {
         findViewById(R.id.btnLogin).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -170,7 +178,9 @@ public class LoginActivity extends BaseActivity {
         });
     }
 
-    /** 登录 */
+    /**
+     * 登录
+     */
     private void login() {
         if (!CommonUtils.isNetWorkConnected(this)) {
             Toast.makeText(this, R.string.network_isnot_available, Toast.LENGTH_SHORT).show();
@@ -225,13 +235,18 @@ public class LoginActivity extends BaseActivity {
         });
     }
 
-    /** 登录到客户端 */
+    /**
+     * 登录到客户端
+     */
     private void loginClientServer() {
         UserDao userDao = new UserDao(this);
         User user = userDao.findUser(currentUsername);
         Log.i(TAG, String.valueOf(user == null));
         if (user != null) { //本地是否保存该账号
-            if (user.getMUserPassword().equals(MD5.getData(currentPassword))) {
+            if (user.getMUserPassword().equals(/*MD5.getData(*/currentPassword)) {
+                Log.i("my", "user.getMUserPassword() = " + user.getMUserPassword());
+                Log.i("my", "currentPassword = " + currentPassword);
+                saveUser(user);
                 loginSuccess();
             } else {
                 Looper.prepare();
@@ -253,7 +268,9 @@ public class LoginActivity extends BaseActivity {
         }
     }
 
-    /** 设置登录成功监听 */
+    /**
+     * 设置登录成功监听
+     */
     private Response.Listener<User> responseListener() {
         return new Response.Listener<User>() {
             @Override
@@ -271,7 +288,9 @@ public class LoginActivity extends BaseActivity {
         };
     }
 
-    /** 保存用户信息 */
+    /**
+     * 保存用户信息
+     */
     private void saveUser(User user) {
         FuliCenterApplication intance = FuliCenterApplication.getInstance();
         intance.setUser(user);
@@ -280,7 +299,9 @@ public class LoginActivity extends BaseActivity {
         FuliCenterApplication.currentUserNick = user.getMUserNick();
     }
 
-    /** 显示进度对话框 */
+    /**
+     * 显示进度对话框
+     */
     private void showProgressDialog() {
         pd.show();
     }
@@ -291,7 +312,9 @@ public class LoginActivity extends BaseActivity {
         pd.dismiss();
     }
 
-    /** 登录成功后操作 */
+    /**
+     * 登录成功后操作
+     */
     private void loginSuccess() {
         try {
             // ** 第一次登录或者之前logout后再登录，加载所有本地群和回话
@@ -301,12 +324,12 @@ public class LoginActivity extends BaseActivity {
             //下载用户头像
             final OkHttpUtils<Message> utils = new OkHttpUtils<Message>();
             utils.url(FuliCenterApplication.SERVER_ROOT)
-                    .addParam(I.KEY_REQUEST,I.REQUEST_DOWNLOAD_AVATAR)
-                    .addParam(I.AVATAR_TYPE,currentUsername)
+                    .addParam(I.KEY_REQUEST, I.REQUEST_DOWNLOAD_AVATAR)
+                    .addParam(I.AVATAR_TYPE, currentUsername)
                     .doInBackground(new Callback() {
                         @Override
                         public void onFailure(Request request, IOException e) {
-                            Toast.makeText(LoginActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+                            Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -321,20 +344,21 @@ public class LoginActivity extends BaseActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    new DownloadContactListTask(currentUsername,LoginActivity.this).execute();
+                    new DownloadContactListTask(currentUsername, LoginActivity.this).execute();
+                    new DownloadCartCountTask(LoginActivity.this, 0, 10).execute();
                 }
             });
             initializeContacts();
         } catch (Exception e) {
             e.printStackTrace();
-            // 取好友或者群聊失败，不让进入主页面
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    pd.dismiss();
-                    DemoHXSDKHelper.getInstance().logout(true, null);
-                    Toast.makeText(getApplicationContext(), R.string.login_failure_failed, Toast.LENGTH_SHORT).show();
-                }
-            });
+//            // 取好友或者群聊失败，不让进入主页面
+//            runOnUiThread(new Runnable() {
+//                public void run() {
+//                    pd.dismiss();
+//                    DemoHXSDKHelper.getInstance().logout(true, null);
+//                    Toast.makeText(getApplicationContext(), R.string.login_failure_failed, Toast.LENGTH_SHORT).show();
+//                }
+//            });
             return;
         }
         // 更新当前用户的nickname 此方法的作用是在ios离线推送时能够显示用户nick
@@ -347,13 +371,15 @@ public class LoginActivity extends BaseActivity {
         }
         // 进入主页面
         String action = getIntent().getStringExtra("action");
-        if (action != null) {
-            sendStickyBroadcast(new Intent("update_user"));
-            Intent intent = new Intent(LoginActivity.this,
-                    FuliCenterMainActivity.class);
-            startActivity(intent);
-            finish();
-        }
+        Log.i("my", "action=" + action);
+//        if (action != null) {
+        sendStickyBroadcast(new Intent("update_user"));
+        Intent intent = new Intent(LoginActivity.this,
+                FuliCenterMainActivity.class);
+        intent.putExtra("action", action);
+        startActivity(intent);
+        finish();
+//        }
     }
 
     private void initializeContacts() {
@@ -382,7 +408,9 @@ public class LoginActivity extends BaseActivity {
         dao.saveContactList(users);
     }
 
-    /** 注册 */
+    /**
+     * 注册
+     */
     private void register() {
         startActivityForResult(new Intent(this, RegisterActivity.class), 0);
     }

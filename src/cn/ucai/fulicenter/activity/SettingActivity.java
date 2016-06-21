@@ -155,6 +155,12 @@ public class SettingActivity extends BaseActivity implements OnClickListener {
             logoutBtn.setText(getString(R.string.button_logout) + "(" + EMChatManager.getInstance().getCurrentUser() + ")");
         }
 
+        findViewById(R.id.back_setting).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         textview1 = (TextView) findViewById(R.id.textview1);
         textview2 = (TextView) findViewById(R.id.textview2);
 
@@ -355,7 +361,9 @@ public class SettingActivity extends BaseActivity implements OnClickListener {
                         instance.getMap().clear();
                         instance.setUser(null);
                         instance.setUserName(null);
+                        instance.setPassword(null);
                         instance.setCollectCount(0);
+
                         pd.dismiss();
                         // 重新显示登陆页面
                         finish();
@@ -379,8 +387,6 @@ public class SettingActivity extends BaseActivity implements OnClickListener {
                         // TODO Auto-generated method stub
                         pd.dismiss();
                         Toast.makeText(SettingActivity.this, "unbind devicetokens failed", Toast.LENGTH_SHORT).show();
-
-
                     }
                 });
             }

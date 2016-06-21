@@ -1,24 +1,32 @@
 package cn.ucai.fulicenter.activity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.View;
 import android.widget.RadioButton;
+import android.widget.TextView;
+
 
 import com.easemob.chat.EMChat;
 
 import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.R;
+import cn.ucai.fulicenter.bean.User;
 import cn.ucai.fulicenter.fragment.BoutiqueFragment;
 import cn.ucai.fulicenter.fragment.CarFragment;
 import cn.ucai.fulicenter.fragment.CategoryFragment;
 import cn.ucai.fulicenter.fragment.NewGoodsFragment;
 import cn.ucai.fulicenter.fragment.OwnerFragment;
+import cn.ucai.fulicenter.task.DownloadCartCountTask;
+import cn.ucai.fulicenter.utils.UserUtils;
+import cn.ucai.fulicenter.utils.Utils;
 
-public class FuliCenterMainActivity extends BaseActivity{
+public class FuliCenterMainActivity extends BaseActivity {
 
     private RadioButton[] Radio;
     private int index;
@@ -29,17 +37,20 @@ public class FuliCenterMainActivity extends BaseActivity{
     CarFragment carFragment;
     OwnerFragment ownerFragment;
     Fragment[] fragments;
+    TextView mtv_CartCount;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fuli_center_main);
+        registerReceiver();
         initView();
-        newGoodsFragment= new NewGoodsFragment();
+        newGoodsFragment = new NewGoodsFragment();
         boutiqueFragment = new BoutiqueFragment();
         categoryFragment = new CategoryFragment();
         carFragment = new CarFragment();
         ownerFragment = new OwnerFragment();
-        fragments = new Fragment[]{newGoodsFragment,boutiqueFragment,categoryFragment,carFragment,ownerFragment};
+        fragments = new Fragment[]{newGoodsFragment, boutiqueFragment, categoryFragment, carFragment, ownerFragment};
         // 添加显示第一个fragment
 
         getSupportFragmentManager().beginTransaction().add(R.id.fl, newGoodsFragment)
@@ -51,10 +62,12 @@ public class FuliCenterMainActivity extends BaseActivity{
                 .commit();
     }
 
+
     /**
      * 初始化组件
      */
     private void initView() {
+        mtv_CartCount = (TextView) findViewById(R.id.cart_count);
         Radio = new RadioButton[5];
         Radio[0] = (RadioButton) findViewById(R.id.newGoods);
         Radio[1] = (RadioButton) findViewById(R.id.Boutique);
@@ -88,7 +101,7 @@ public class FuliCenterMainActivity extends BaseActivity{
             case R.id.me:
                 if (FuliCenterApplication.getInstance().getUser() == null) {
                     startActivity(new Intent(this, LoginActivity.class)
-                    .putExtra("action","person"));
+                            .putExtra("action", "person"));
                 } else {
                     index = 4;
                 }
@@ -109,7 +122,7 @@ public class FuliCenterMainActivity extends BaseActivity{
     }
 
     private void setRadioChecked(int index) {
-        for (int i=0;i<Radio.length;i++) {
+        for (int i = 0; i < Radio.length; i++) {
             if (i == index) {
                 Radio[i].setChecked(true);
             } else {
@@ -118,17 +131,51 @@ public class FuliCenterMainActivity extends BaseActivity{
         }
     }
 
+    String action;
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        action = getIntent().getStringExtra("action");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver);
+        }
+    }
+
+    class CartReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (FuliCenterApplication.getInstance().getUser() != null) {
+                new DownloadCartCountTask(context, 0, 10).execute();
+                int SumCount = Utils.SumCount();
+                if (SumCount > 0) {
+                    int size = FuliCenterApplication.getInstance().getCartBeanArrayList().size();
+                    mtv_CartCount.setText("" + size);
+                } else {
+                    mtv_CartCount.setVisibility(View.GONE);
+                }
+            }
+        }
+    }
+
+    CartReceiver mReceiver;
+
+    private void registerReceiver() {
+        mReceiver = new CartReceiver();
+        IntentFilter filter = new IntentFilter("update_cart_list");
+        registerReceiver(mReceiver, filter);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        String action = getIntent().getStringExtra("action");
-        Log.i("main", "action1=" + action);
         if (action != null && FuliCenterApplication.getInstance().getUser() != null) {
             if (action.equals("person")) {
                 index = 4;
@@ -136,7 +183,7 @@ public class FuliCenterMainActivity extends BaseActivity{
         } else {
             setRadioChecked(index);
         }
-        if (currentTabIndex == 4 && FuliCenterApplication.getInstance().getUser() != null) {
+        if (currentTabIndex == 4 && FuliCenterApplication.getInstance().getUser() == null) {
             index = 0;
         }
         if (currentTabIndex != index) {

@@ -1,0 +1,33 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/detai_collect"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="5dp"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:paddingTop="5dp">
+
+
+    <com.android.volley.toolbox.NetworkImageView
+        android:id="@+id/netiv_photo_collect"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/default_face" />
+
+    <ImageView
+        android:id="@+id/delete_collect"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/delete" />
+
+    <TextView
+        android:id="@+id/good_tv_name_collect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/netiv_photo_collect"
+        android:layout_marginTop="6dp"
+        android:text="aaaa"
+        android:textColor="#000" />
+</RelativeLayout>

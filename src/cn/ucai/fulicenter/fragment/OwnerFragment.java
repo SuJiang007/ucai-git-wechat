@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -25,6 +26,7 @@ import java.util.Objects;
 
 import cn.ucai.fulicenter.FuliCenterApplication;
 import cn.ucai.fulicenter.R;
+import cn.ucai.fulicenter.activity.CollectActivity;
 import cn.ucai.fulicenter.activity.SettingActivity;
 import cn.ucai.fulicenter.bean.User;
 import cn.ucai.fulicenter.task.DownloadCollectCountTask;
@@ -46,6 +48,7 @@ public class OwnerFragment extends Fragment {
     MyClickListener listener;
     User user;
     RelativeLayout rl_owner;
+    LinearLayout mll;
 
     public OwnerFragment() {
         // Required empty public constructor
@@ -70,6 +73,12 @@ public class OwnerFragment extends Fragment {
         listener = new MyClickListener();
         mtv_Setting.setOnClickListener(listener);
         rl_owner.setOnClickListener(listener);
+        mll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(mContext, CollectActivity.class));
+            }
+        });
     }
 
     class MyClickListener implements View.OnClickListener {
@@ -89,7 +98,6 @@ public class OwnerFragment extends Fragment {
         collectCount = FuliCenterApplication.getInstance().getCollectCount();
         mtv_collect_count.setText(""+collectCount);
         user = FuliCenterApplication.getInstance().getUser();
-        Log.i("main", "user=" + user);
         if (user != null) {
             UserUtils.setCurrentUserAvatar(userAvatar);
             UserUtils.setCurrentUserBeanNick(mtv_name);
@@ -110,6 +118,7 @@ public class OwnerFragment extends Fragment {
         miv_wodetequan = (ImageView) layout.findViewById(R.id.wodetequan);
         miv_message = (ImageView) layout.findViewById(R.id.owner_msg);
 
+        mll = (LinearLayout) layout.findViewById(R.id.owner_collect_baby);
         initOrderList(layout);
     }
 
@@ -139,7 +148,10 @@ public class OwnerFragment extends Fragment {
     class CollectCountChangedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            initDate();
+            if (FuliCenterApplication.getInstance().getUser() != null) {
+                new DownloadCollectCountTask(mContext).execute();
+                initDate();
+            }
         }
     }
     CollectCountChangedReceiver mReceiver;
@@ -152,8 +164,10 @@ public class OwnerFragment extends Fragment {
     class UpdateUserChangedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            new DownloadCollectCountTask(mContext).execute();
-            initDate();
+            if (FuliCenterApplication.getInstance().getUser() != null) {
+                new DownloadCollectCountTask(mContext).execute();
+                initDate();
+            }
         }
     }
     UpdateUserChangedReceiver mUserReceiver;
