@@ -64,7 +64,7 @@
                     android:gravity="center"
                     android:text="0"
                     android:id="@+id/cart_count"
-                    android:visibility="visible"/>
+                    android:visibility="gone"/>
             </RelativeLayout>
             <RadioButton
                 style="@style/menu_item_style"

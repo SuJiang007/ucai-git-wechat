@@ -129,13 +129,11 @@ public class NewGoodsFragment extends Fragment {
 
 
     private String getPath(int page_id) throws Exception {
-        Log.i("main", "page_id=" + page_id);
         String requestUrl = new ApiParams()
                 .with(I.NewAndBoutiqueGood.CAT_ID, I.CAT_ID + "")
                 .with(I.PAGE_ID, page_id + "")
                 .with(I.PAGE_SIZE, I.PAGE_SIZE_DEFAULT + "")
                 .getRequestUrl(I.REQUEST_FIND_NEW_BOUTIQUE_GOODS);
-        Log.i("main", "url=" + requestUrl);
         return requestUrl;
     }
 

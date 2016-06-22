@@ -57,7 +57,6 @@ public class DownloadCollectCountTask extends BaseActivity{
                 } else {
                     FuliCenterApplication.getInstance().setCollectCount(0);
                 }
-
                 context.sendStickyBroadcast(new Intent("update_collect_count"));
             }
         };

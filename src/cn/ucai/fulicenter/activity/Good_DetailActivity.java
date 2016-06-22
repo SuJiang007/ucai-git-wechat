@@ -1,7 +1,10 @@
 package cn.ucai.fulicenter.activity;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -34,6 +37,7 @@ import cn.ucai.fulicenter.data.GsonRequest;
 import cn.ucai.fulicenter.task.DownloadCollectCountTask;
 import cn.ucai.fulicenter.utils.ImageUtils;
 import cn.ucai.fulicenter.utils.UserUtils;
+import cn.ucai.fulicenter.utils.Utils;
 
 public class Good_DetailActivity extends BaseActivity {
     TextView mtv_English_Name, mtv_Chinese_Name, mtv_Price;
@@ -92,6 +96,17 @@ public class Good_DetailActivity extends BaseActivity {
                         }
                     }
                 }
+            }
+        });
+        setCartListener();
+        RegisterUpdate();
+    }
+
+    private void setCartListener() {
+        miv_cart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Utils.addCart(Good_DetailActivity.this,mGoods);
             }
         });
     }
@@ -199,7 +214,11 @@ public class Good_DetailActivity extends BaseActivity {
         mSlideAutoLoopView.startPlayLoop(mFlowIndicator, albumsImgUrl, albumsImgUrl.length);
     }
 
+    ImageView miv_cart;
+    TextView mtv_CartCount;
     private void initView() {
+        mtv_CartCount = (TextView) findViewById(R.id.count);
+        miv_cart = (ImageView) findViewById(R.id.cart);
         mFlowIndicator = (FlowIndicator) findViewById(R.id.flowIndicator);
         mtv_English_Name = (TextView) findViewById(R.id.English_name);
         mtv_Chinese_Name = (TextView) findViewById(R.id.Chinese_name);
@@ -217,8 +236,18 @@ public class Good_DetailActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         initCollect();
+        initCartStatus();
     }
-
+    private void initCartStatus() {
+        int count = Utils.SumCount();
+        if (count > 0) {
+            mtv_CartCount.setVisibility(View.VISIBLE);
+            mtv_CartCount.setText("" + count);
+        } else {
+            mtv_CartCount.setVisibility(View.GONE);
+            mtv_CartCount.setText("0");
+        }
+    }
     private void initCollect() {
         try {
             String path = new ApiParams()
@@ -245,5 +274,29 @@ public class Good_DetailActivity extends BaseActivity {
                 }
             }
         };
+    }
+
+    class UpdateCartReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            initCartStatus();
+        }
+    }
+
+    UpdateCartReceiver mReceiver;
+
+    private void RegisterUpdate() {
+        mReceiver = new UpdateCartReceiver();
+        IntentFilter filter = new IntentFilter("update_cart");
+        registerReceiver(mReceiver,filter);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver);
+        }
     }
 }

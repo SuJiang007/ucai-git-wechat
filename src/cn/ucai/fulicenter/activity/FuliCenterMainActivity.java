@@ -84,6 +84,9 @@ public class FuliCenterMainActivity extends BaseActivity {
      *
      * @param view
      */
+    String ACTION_PERSON = "person";
+    String ACTION_CART = "cart";
+
     public void onCheckedChange(View view) {
         switch (view.getId()) {
             case R.id.newGoods:
@@ -96,12 +99,17 @@ public class FuliCenterMainActivity extends BaseActivity {
                 index = 2;
                 break;
             case R.id.tvCar:
-                index = 3;
+                if (FuliCenterApplication.getInstance().getUser() == null) {
+                    startActivity(new Intent(this, LoginActivity.class)
+                            .putExtra("action", ACTION_CART));
+                } else {
+                    index = 3;
+                }
                 break;
             case R.id.me:
                 if (FuliCenterApplication.getInstance().getUser() == null) {
                     startActivity(new Intent(this, LoginActivity.class)
-                            .putExtra("action", "person"));
+                            .putExtra("action", ACTION_PERSON));
                 } else {
                     index = 4;
                 }
@@ -158,6 +166,7 @@ public class FuliCenterMainActivity extends BaseActivity {
                 if (SumCount > 0) {
                     int size = FuliCenterApplication.getInstance().getCartBeanArrayList().size();
                     mtv_CartCount.setText("" + size);
+                    mtv_CartCount.setVisibility(View.VISIBLE);
                 } else {
                     mtv_CartCount.setVisibility(View.GONE);
                 }
@@ -170,6 +179,8 @@ public class FuliCenterMainActivity extends BaseActivity {
     private void registerReceiver() {
         mReceiver = new CartReceiver();
         IntentFilter filter = new IntentFilter("update_cart_list");
+        filter.addAction("update_user");
+        filter.addAction("update_cart");
         registerReceiver(mReceiver, filter);
     }
 
@@ -179,6 +190,9 @@ public class FuliCenterMainActivity extends BaseActivity {
         if (action != null && FuliCenterApplication.getInstance().getUser() != null) {
             if (action.equals("person")) {
                 index = 4;
+            }
+            if (action.equals(ACTION_CART)) {
+                index = 3;
             }
         } else {
             setRadioChecked(index);
@@ -199,4 +213,5 @@ public class FuliCenterMainActivity extends BaseActivity {
             currentTabIndex = index;
         }
     }
+
 }
