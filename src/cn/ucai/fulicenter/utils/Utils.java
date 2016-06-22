@@ -1,6 +1,7 @@
 package cn.ucai.fulicenter.utils;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -83,6 +84,7 @@ public class Utils {
         for (CartBean cart : cartlist) {
           Count += cart.getCount();
         }
+        Log.i("my", "Count=" + Count);
         return Count;
     }
 
